@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DrakoYuda Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <style>
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-gray-950">
+  <div id="root"></div>
+
+  <script>
+    const { useState, useEffect } = React;
+    const e = React.createElement;
+
+    const FOREST = "#2D5F3F";
+    const GOLD   = "#D4AF37";
+    const CARD   = "#0f1a13";
+
+    function formatTime() {
+      return new Date().toLocaleTimeString("en-US", { hour12: false });
+    }
+
+    function Card({ title, children }) {
+      return e("div", {
+        className: "rounded-xl p-5 border",
+        style: { backgroundColor: CARD, borderColor: FOREST }
+      },
+        e("p", {
+          className: "text-xs uppercase tracking-widest mb-3",
+          style: { color: GOLD, opacity: 0.6 }
+        }, title),
+        children
+      );
+    }
+
+    function StatusCard() {
+      return e(Card, { title: "Status" },
+        e("div", { className: "flex items-center gap-3" },
+          e("span", {
+            className: "pulse-dot w-3 h-3 rounded-full",
+            style: { backgroundColor: FOREST, boxShadow: "0 0 8px " + FOREST }
+          }),
+          e("span", {
+            className: "text-xl font-semibold",
+            style: { color: FOREST }
+          }, "Active")
+        )
+      );
+    }
+
+    function MetricsCard({ time, rate }) {
+      function Row({ label, value }) {
+        return e("div", { className: "flex justify-between items-center" },
+          e("span", { className: "text-sm text-gray-400" }, label),
+          e("span", { className: "font-semibold", style: { color: GOLD } }, value)
+        );
+      }
+      return e(Card, { title: "Metrics" },
+        e("div", { className: "space-y-2" },
+          e(Row, { label: "Execution Time", value: time + "ms" }),
+          e(Row, { label: "Success Rate",   value: rate + "%" })
+        )
+      );
+    }
+
+    function ActionsCard({ running, onRun }) {
+      return e(Card, { title: "Actions" },
+        e("button", {
+          onClick: onRun,
+          disabled: running,
+          className: "w-full py-2 rounded-lg font-semibold text-sm transition-all duration-200",
+          style: {
+            backgroundColor: running ? "#1a3a26" : FOREST,
+            color: GOLD,
+            border: "1px solid " + GOLD,
+            opacity: running ? 0.6 : 1,
+            cursor: running ? "not-allowed" : "pointer"
+          }
+        }, running ? "Running..." : "Run Test")
+      );
+    }
+
+    function ActivityLog({ logs }) {
+      return e("div", {
+        className: "rounded-xl p-5 border",
+        style: { backgroundColor: CARD, borderColor: FOREST }
+      },
+        e("p", {
+          className: "text-xs uppercase tracking-widest mb-4",
+          style: { color: GOLD, opacity: 0.6 }
+        }, "Activity Log"),
+        e("ul", { className: "space-y-2 max-h-48 overflow-y-auto pr-1" },
+          logs.map(function(entry) {
+            return e("li", { key: entry.id, className: "flex gap-3 text-sm font-mono" },
+              e("span", { className: "shrink-0 text-gray-500" }, "[" + entry.time + "]"),
+              e("span", { className: "text-gray-200" }, entry.msg)
+            );
+          })
+        )
+      );
+    }
+
+    function Dashboard() {
+      const [running, setRunning] = useState(false);
+      const [metrics, setMetrics] = useState({ time: 242, rate: "98.5" });
+      const [logs, setLogs] = useState([
+        { id: 1, time: "08:00:01", msg: "System initialized" },
+        { id: 2, time: "08:00:03", msg: "Execution lab ready" },
+        { id: 3, time: "08:00:05", msg: "Awaiting commands" }
+      ]);
+
+      function runTest() {
+        if (running) return;
+        setRunning(true);
+        const t0 = formatTime();
+        setLogs(function(prev) {
+          return [...prev, { id: Date.now(), time: t0, msg: "Test execution started..." }];
+        });
+        setTimeout(function() {
+          const ms   = Math.floor(Math.random() * 100 + 200);
+          const rate = (97 + Math.random() * 2).toFixed(1);
+          setMetrics({ time: ms, rate: rate });
+          setLogs(function(prev) {
+            return [...prev, {
+              id: Date.now() + 1,
+              time: formatTime(),
+              msg: "Test completed — " + ms + "ms / " + rate + "% success"
+            }];
+          });
+          setRunning(false);
+        }, 1200);
+      }
+
+      return e("div", { className: "min-h-screen bg-gray-950 text-gray-100 p-6 font-mono" },
+
+        e("header", {
+          className: "mb-8 pb-4 border-b-2",
+          style: { borderColor: GOLD }
+        },
+          e("h1", {
+            className: "text-3xl font-bold",
+            style: { color: GOLD }
+          }, "DrakoYuda Dashboard"),
+          e("p", { className: "text-sm mt-1 text-gray-400" }, "Execution Lab Control Center")
+        ),
+
+        e("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4 mb-8" },
+          e(StatusCard),
+          e(MetricsCard, { time: metrics.time, rate: metrics.rate }),
+          e(ActionsCard, { running: running, onRun: runTest })
+        ),
+
+        e(ActivityLog, { logs: logs })
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(e(Dashboard));
+  </script>
+</body>
+</html>
