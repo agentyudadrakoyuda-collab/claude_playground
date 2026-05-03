@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris MVP — DrakoYuda</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f1f14; }
+    button:hover { filter: brightness(1.3); }
+  </style>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    'use strict';
+
+    const { useState, useEffect, useCallback, useRef } = React;
+    const e = React.createElement;
+
+    /* ── constants ── */
+    const COLS = 10, ROWS = 20, CELL = 28;
+
+    const PIECES = {
+      I: { shape: [[1,1,1,1]],           color: '#00c8c8' },
+      O: { shape: [[1,1],[1,1]],          color: '#c8c800' },
+      T: { shape: [[0,1,0],[1,1,1]],      color: '#9000c8' },
+      S: { shape: [[0,1,1],[1,1,0]],      color: '#00c800' },
+      Z: { shape: [[1,1,0],[0,1,1]],      color: '#c80000' },
+      J: { shape: [[1,0,0],[1,1,1]],      color: '#0000c8' },
+      L: { shape: [[0,0,1],[1,1,1]],      color: '#c87800' },
+    };
+    const KEYS = Object.keys(PIECES);
+    const SCORES = [0, 100, 300, 500, 800];
+
+    /* ── palette ── */
+    const GREEN  = '#2D5F3F';
+    const GOLD   = '#D4AF37';
+    const DARK   = '#0f1f14';
+    const MID    = '#1a2e20';
+    const MUTED  = '#5a8a6a';
+    const CREAM  = '#f0e6c0';
+
+    /* ── pure game logic ── */
+    const emptyBoard = () =>
+      Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+
+    const randPiece = () => {
+      const k = KEYS[Math.floor(Math.random() * KEYS.length)];
+      const { shape, color } = PIECES[k];
+      return { shape, color, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0 };
+    };
+
+    const rotate = shape => {
+      const r = shape.length, c = shape[0].length;
+      return Array.from({ length: c }, (_, ci) =>
+        Array.from({ length: r }, (_, ri) => shape[r - 1 - ri][ci])
+      );
+    };
+
+    const valid = (board, shape, x, y) => {
+      for (let r = 0; r < shape.length; r++)
+        for (let c = 0; c < shape[r].length; c++) {
+          if (!shape[r][c]) continue;
+          const nx = x + c, ny = y + r;
+          if (nx < 0 || nx >= COLS || ny >= ROWS) return false;
+          if (ny >= 0 && board[ny][nx]) return false;
+        }
+      return true;
+    };
+
+    const place = (board, piece) => {
+      const b = board.map(r => [...r]);
+      piece.shape.forEach((row, r) =>
+        row.forEach((cell, c) => {
+          if (cell) b[piece.y + r][piece.x + c] = piece.color;
+        })
+      );
+      return b;
+    };
+
+    const clearLines = board => {
+      const kept = board.filter(row => row.some(c => !c));
+      const cleared = ROWS - kept.length;
+      return {
+        board: [...Array.from({ length: cleared }, () => Array(COLS).fill(null)), ...kept],
+        cleared,
+      };
+    };
+
+    /* ── styles ── */
+    const S = {
+      root:    { display:'flex', flexDirection:'column', alignItems:'center', minHeight:'100vh',
+                 background: DARK, color: CREAM, fontFamily:"'Courier New',monospace", padding:'24px 16px' },
+      title:   { fontSize:34, letterSpacing:14, color: GOLD, marginBottom:22,
+                 textShadow:`0 0 24px ${GOLD}` },
+      layout:  { display:'flex', gap:24, alignItems:'flex-start' },
+      boardWrap:{ position:'relative' },
+      board:   { display:'grid',
+                 gridTemplateColumns:`repeat(${COLS},${CELL}px)`,
+                 gridTemplateRows:`repeat(${ROWS},${CELL}px)`,
+                 border:`2px solid ${GREEN}`,
+                 boxShadow:`0 0 32px ${GREEN}55` },
+      cell:    { width:CELL, height:CELL, boxSizing:'border-box' },
+      overlay: { position:'absolute', inset:0, display:'flex', flexDirection:'column',
+                 alignItems:'center', justifyContent:'center',
+                 background:'rgba(0,0,0,0.82)', gap:18 },
+      overlayTxt:{ fontSize:28, fontWeight:'bold', letterSpacing:6, color: GOLD,
+                   textShadow:`0 0 20px ${GOLD}` },
+      panel:   { display:'flex', flexDirection:'column', gap:14, width:148 },
+      stat:    { background: MID, border:`1px solid ${GREEN}`, borderRadius:6, padding:'8px 12px' },
+      statLbl: { fontSize:10, letterSpacing:2, color: MUTED, marginBottom:2 },
+      statVal: { fontSize:24, fontWeight:'bold', color: GOLD },
+      secLbl:  { fontSize:10, letterSpacing:3, color: MUTED, marginBottom:-6 },
+      nextGrid:{ display:'grid', gridTemplateColumns:'repeat(4,24px)',
+                 gridTemplateRows:'repeat(4,24px)',
+                 border:`1px solid ${GREEN}`, background: MID, borderRadius:4, padding:4 },
+      nextCell:{ width:24, height:24, boxSizing:'border-box' },
+      ctrl:    { fontSize:11, color: MUTED, lineHeight:1.8 },
+      ctrlHdr: { fontSize:10, letterSpacing:2, color: GOLD, marginBottom:4 },
+      btn:     { background:`${GREEN}55`, border:`1px solid ${GOLD}`,
+                 color: GOLD, fontFamily:"'Courier New',monospace",
+                 fontSize:12, letterSpacing:2, padding:'9px 16px',
+                 cursor:'pointer', borderRadius:4, transition:'filter .15s' },
+    };
+
+    /* ── sub-components ── */
+    function Stat({ label, value }) {
+      return e('div', { style: S.stat },
+        e('div', { style: S.statLbl }, label),
+        e('div', { style: S.statVal }, value)
+      );
+    }
+
+    function NextPiece({ piece }) {
+      const grid = Array.from({ length: 4 }, () => Array(4).fill(null));
+      const offR = Math.floor((4 - piece.shape.length) / 2);
+      const offC = Math.floor((4 - piece.shape[0].length) / 2);
+      piece.shape.forEach((row, r) =>
+        row.forEach((cell, c) => { if (cell) grid[offR + r][offC + c] = piece.color; })
+      );
+      return e('div', { style: S.nextGrid },
+        grid.flatMap((row, r) =>
+          row.map((color, c) =>
+            e('div', {
+              key: `${r}-${c}`,
+              style: {
+                ...S.nextCell,
+                background: color || `${GREEN}22`,
+                border: color ? `1px solid ${GOLD}88` : `1px solid ${GREEN}44`,
+                boxShadow: color ? `inset 0 0 5px ${color}99` : 'none',
+              }
+            })
+          )
+        )
+      );
+    }
+
+    /* ── main component ── */
+    function TetrisMVP() {
+      const [board, setBoard]     = useState(emptyBoard);
+      const [piece, setPiece]     = useState(randPiece);
+      const [next,  setNext]      = useState(randPiece);
+      const [score, setScore]     = useState(0);
+      const [lines, setLines]     = useState(0);
+      const [gameOver, setGameOver] = useState(false);
+      const [paused, setPaused]   = useState(false);
+
+      const boardRef = useRef(board);
+      const pieceRef = useRef(piece);
+      boardRef.current = board;
+      pieceRef.current = piece;
+
+      const lock = useCallback(() => {
+        const b = place(boardRef.current, pieceRef.current);
+        const { board: cleared, cleared: count } = clearLines(b);
+        setBoard(cleared);
+        setScore(s => s + SCORES[count]);
+        setLines(l => l + count);
+        const n = randPiece();
+        if (!valid(cleared, next.shape, next.x, next.y)) {
+          setGameOver(true);
+        } else {
+          setPiece(next);
+          setNext(n);
+        }
+      }, [next]);
+
+      const moveDown = useCallback(() => {
+        const p = pieceRef.current;
+        if (valid(boardRef.current, p.shape, p.x, p.y + 1))
+          setPiece(prev => ({ ...prev, y: prev.y + 1 }));
+        else lock();
+      }, [lock]);
+
+      useEffect(() => {
+        if (gameOver || paused) return;
+        const id = setInterval(moveDown, 500);
+        return () => clearInterval(id);
+      }, [moveDown, gameOver, paused]);
+
+      useEffect(() => {
+        const handle = ev => {
+          if (gameOver) return;
+          if (ev.key === 'p' || ev.key === 'P') { setPaused(v => !v); return; }
+          if (paused) return;
+          const p = pieceRef.current, b = boardRef.current;
+          if (ev.key === 'ArrowLeft') {
+            if (valid(b, p.shape, p.x - 1, p.y)) setPiece(prev => ({ ...prev, x: prev.x - 1 }));
+          } else if (ev.key === 'ArrowRight') {
+            if (valid(b, p.shape, p.x + 1, p.y)) setPiece(prev => ({ ...prev, x: prev.x + 1 }));
+          } else if (ev.key === 'ArrowDown') {
+            ev.preventDefault(); moveDown();
+          } else if (ev.key === 'ArrowUp') {
+            ev.preventDefault();
+            const rot = rotate(p.shape);
+            if (valid(b, rot, p.x, p.y)) setPiece(prev => ({ ...prev, shape: rot }));
+          } else if (ev.key === ' ') {
+            ev.preventDefault();
+            let ny = p.y;
+            while (valid(b, p.shape, p.x, ny + 1)) ny++;
+            setPiece(prev => ({ ...prev, y: ny }));
+            setTimeout(lock, 0);
+          }
+        };
+        window.addEventListener('keydown', handle);
+        return () => window.removeEventListener('keydown', handle);
+      }, [gameOver, paused, moveDown, lock]);
+
+      const restart = () => {
+        setBoard(emptyBoard()); const p = randPiece(), n = randPiece();
+        setPiece(p); setNext(n); setScore(0); setLines(0);
+        setGameOver(false); setPaused(false);
+      };
+
+      const display = piece && !gameOver ? place(board, piece) : board;
+
+      // ghost piece
+      let ghostY = piece?.y ?? 0;
+      if (piece && !gameOver) while (valid(board, piece.shape, piece.x, ghostY + 1)) ghostY++;
+      const ghostCells = new Set();
+      if (piece && !gameOver && ghostY !== piece.y)
+        piece.shape.forEach((row, r) => row.forEach((cell, c) => {
+          if (cell) ghostCells.add(`${piece.y + r + (ghostY - piece.y)},${piece.x + c}`);
+        }));
+
+      const level = Math.floor(lines / 10) + 1;
+
+      return e('div', { style: S.root },
+        e('h1', { style: S.title }, 'TETRIS'),
+        e('div', { style: S.layout },
+
+          // board
+          e('div', { style: S.boardWrap },
+            e('div', { style: S.board },
+              display.flatMap((row, r) =>
+                row.map((color, c) => {
+                  const isGhost = ghostCells.has(`${r},${c}`);
+                  return e('div', {
+                    key: `${r}-${c}`,
+                    style: {
+                      ...S.cell,
+                      background: color ? color
+                                : isGhost ? `${GREEN}55`
+                                : `${GREEN}11`,
+                      border: color ? `1px solid ${GOLD}66`
+                            : isGhost ? `1px solid ${GREEN}88`
+                            : `1px solid ${GREEN}33`,
+                      boxShadow: color ? `inset 0 0 7px ${color}99` : 'none',
+                    }
+                  });
+                })
+              )
+            ),
+            (gameOver || paused) && e('div', { style: S.overlay },
+              e('div', { style: S.overlayTxt }, gameOver ? 'GAME OVER' : 'PAUSED'),
+              gameOver && e('button', { style: S.btn, onClick: restart }, 'RESTART'),
+              paused  && e('button', { style: S.btn, onClick: () => setPaused(false) }, 'RESUME')
+            )
+          ),
+
+          // side panel
+          e('div', { style: S.panel },
+            e(Stat, { label: 'SCORE', value: score }),
+            e(Stat, { label: 'LINES', value: lines }),
+            e(Stat, { label: 'LEVEL', value: level }),
+            e('div', { style: S.secLbl }, 'NEXT'),
+            e(NextPiece, { piece: next }),
+            e('div', { style: S.ctrl },
+              e('div', { style: S.ctrlHdr }, 'CONTROLS'),
+              e('div', null, '← → Move'),
+              e('div', null, '↑  Rotate'),
+              e('div', null, '↓  Soft drop'),
+              e('div', null, '␣  Hard drop'),
+              e('div', null, 'P  Pause'),
+            ),
+            e('button', { style: S.btn, onClick: restart }, 'NEW GAME')
+          )
+        )
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root'))
+      .render(React.createElement(TetrisMVP));
+  </script>
+</body>
+</html>
