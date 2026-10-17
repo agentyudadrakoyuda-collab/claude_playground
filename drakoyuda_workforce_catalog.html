@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DrakoYuda · Catálogo da Força Digital · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #060907;
+  --ink-2: #0d1209;
+  --gold: #E8C84A;
+  --gold-muted: #8B6914;
+  --gold-light: #c4a96a;
+  --gold-pale: #f0e4a8;
+  --parchment: #f5f0e8;
+  --parchment-dark: #ece5d5;
+  --green: #2E7D4F;
+  --green-pale: #d4eddd;
+  --red: #C2410C;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'EB Garamond', Georgia, serif;
+  --font-mono: 'Courier Prime', 'Courier New', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--parchment);font-family:var(--font-body);font-size:16px;line-height:1.6;min-width:1280px;overflow-x:hidden}
+
+/* ── GRAIN OVERLAY ── */
+.grain::after{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+/* ── COVER ── */
+#cover{position:relative;width:100%;height:100vh;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:2rem}
+#cover::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,#0f1a0c 0%,var(--ink) 70%)}
+.cover-content{position:relative;z-index:1;text-align:center;max-width:900px}
+.cover-dy-mark{display:inline-flex;align-items:center;justify-content:center;width:100px;height:100px;border:2px solid var(--gold);border-radius:50%;margin-bottom:2.5rem;position:relative;animation:coverFadeIn 1.2s ease both}
+.cover-dy-mark svg{width:60px;height:60px}
+.cover-building{margin:2rem auto;width:460px;opacity:0;animation:coverFadeIn 1s ease 0.4s both}
+.cover-title{font-family:var(--font-display);font-size:3.2rem;font-weight:700;color:var(--gold);letter-spacing:0.04em;margin-bottom:0.5rem;opacity:0;animation:coverFadeIn 1s ease 0.6s both}
+.cover-sub{font-family:var(--font-body);font-size:1.35rem;color:var(--gold-light);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;opacity:0;animation:coverFadeIn 1s ease 0.8s both}
+.cover-tagline{font-family:var(--font-body);font-style:italic;font-size:1.1rem;color:var(--parchment);opacity:0;animation:coverFadeIn 1s ease 1s both;margin-bottom:3rem}
+.cover-divider{display:flex;align-items:center;gap:1rem;justify-content:center;margin:1.5rem 0;opacity:0;animation:coverFadeIn 0.8s ease 1.1s both}
+.cover-divider::before,.cover-divider::after{content:'';flex:1;max-width:160px;height:1px;background:linear-gradient(to right,transparent,var(--gold-muted))}
+.cover-divider::after{background:linear-gradient(to left,transparent,var(--gold-muted))}
+.cover-divider span{color:var(--gold);font-size:0.8rem}
+.cover-enter{display:inline-block;margin-top:1rem;padding:0.85rem 2.5rem;border:1.5px solid var(--gold);color:var(--gold);font-family:var(--font-mono);font-size:0.85rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;background:transparent;transition:all 0.3s;opacity:0;animation:coverFadeIn 0.8s ease 1.4s both}
+.cover-enter:hover{background:var(--gold);color:var(--ink)}
+.cover-meta{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:0.72rem;color:var(--gold-muted);letter-spacing:0.1em;opacity:0;animation:coverFadeIn 0.8s ease 1.6s both;text-align:center;line-height:1.8}
+
+/* ── NAV ── */
+#floor-nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid var(--gold-muted);display:flex;align-items:center;padding:0 2rem;height:60px;gap:0}
+.nav-brand{display:flex;align-items:center;gap:0.75rem;margin-right:2rem;flex-shrink:0}
+.nav-brand-mark{width:36px;height:36px;border:1px solid var(--gold-muted);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.nav-brand-mark svg{width:20px;height:20px}
+.nav-brand-name{font-family:var(--font-mono);font-size:0.7rem;color:var(--gold-muted);letter-spacing:0.15em;text-transform:uppercase;line-height:1.3}
+.nav-sep{width:1px;height:30px;background:var(--gold-muted);opacity:0.3;margin:0 0.5rem}
+.nav-floors{display:flex;align-items:stretch;height:100%;gap:0}
+.nav-btn{padding:0 1.5rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--gold-muted);font-family:var(--font-mono);font-size:0.73rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap;height:100%}
+.nav-btn:hover:not(:disabled){color:var(--gold);border-bottom-color:var(--gold-muted)}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.nav-btn:disabled{color:#3a4038;cursor:not-allowed}
+.nav-btn .coming-soon{font-size:0.6rem;margin-left:0.4rem;opacity:0.6}
+
+/* ── FLOOR SECTIONS ── */
+.floor-section{display:none;min-height:100vh;padding:3rem 2rem 5rem}
+.floor-section.active{display:block}
+.floor-header{text-align:center;margin-bottom:4rem;padding-bottom:2rem;border-bottom:1px solid var(--gold-muted)}
+.floor-header-badge{font-family:var(--font-mono);font-size:0.72rem;color:var(--gold-muted);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.5rem}
+.floor-header-title{font-family:var(--font-display);font-size:2.8rem;font-weight:700;color:var(--gold)}
+.floor-header-sub{font-family:var(--font-body);font-style:italic;font-size:1.1rem;color:var(--parchment);margin-top:0.4rem}
+
+/* ── DIAMOND DIVIDER ── */
+.diamond-div{display:flex;align-items:center;gap:1rem;margin:2rem 0}
+.diamond-div::before,.diamond-div::after{content:'';flex:1;height:1px;background:var(--gold-muted);opacity:0.4}
+.diamond-div span{color:var(--gold-muted);font-size:0.6rem;transform:rotate(45deg);display:inline-block}
+
+/* ── AGENT CARD (Floor 5) ── */
+.agent-card{background:var(--parchment);color:var(--ink);max-width:1100px;margin:0 auto 5rem;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5);transition:transform 0.3s,box-shadow 0.3s;opacity:0;transform:translateY(30px)}
+.agent-card.revealed{opacity:1;transform:translateY(0);transition:opacity 0.6s ease,transform 0.6s ease,box-shadow 0.3s}
+.agent-card:hover{transform:translateY(-4px);box-shadow:0 16px 60px rgba(232,200,74,0.15),0 8px 40px rgba(0,0,0,0.6)}
+/* Corner ornaments */
+.agent-card::before,.agent-card::after{content:'';position:absolute;width:24px;height:24px;border-color:var(--gold-muted);border-style:solid;z-index:2;opacity:0.6}
+.agent-card::before{top:10px;left:10px;border-width:1.5px 0 0 1.5px}
+.agent-card::after{top:10px;right:10px;border-width:1.5px 1.5px 0 0}
+.card-corner-bl,.card-corner-br{position:absolute;width:24px;height:24px;border-color:var(--gold-muted);border-style:solid;z-index:2;opacity:0.6;bottom:10px}
+.card-corner-bl{left:10px;border-width:0 0 1.5px 1.5px}
+.card-corner-br{right:10px;border-width:0 1.5px 1.5px 0}
+
+/* Card Header */
+.card-header{background:var(--ink);color:var(--parchment);padding:1.2rem 2.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--gold-muted)}
+.card-header-left{display:flex;align-items:center;gap:1rem}
+.card-hdr-logo{width:36px;height:36px;border:1px solid var(--gold-muted);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-hdr-logo svg{width:20px;height:20px}
+.card-hdr-texts{}
+.card-hdr-floor{font-family:var(--font-mono);font-size:0.68rem;color:var(--gold-muted);letter-spacing:0.15em;text-transform:uppercase}
+.card-hdr-title{font-family:var(--font-display);font-size:1rem;font-weight:600;color:var(--gold);letter-spacing:0.02em}
+.card-hdr-sub{font-family:var(--font-mono);font-size:0.65rem;color:var(--parchment);opacity:0.6;letter-spacing:0.1em;text-transform:uppercase}
+.card-hdr-right{text-align:right}
+.card-hdr-issue{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);letter-spacing:0.1em}
+
+/* Location Strip */
+.card-location{background:#0d1209;color:var(--gold-light);padding:0.6rem 2.5rem;font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.12em;border-bottom:1px solid var(--gold-muted);display:flex;align-items:center;gap:0.5rem}
+.card-location::before{content:"◈";color:var(--gold-muted);font-size:0.65rem}
+
+/* Identity Block */
+.card-identity{display:grid;grid-template-columns:240px 1fr;gap:2.5rem;padding:2.5rem}
+.portrait-wrap{display:flex;flex-direction:column;align-items:center;gap:1.2rem}
+.portrait-img{width:200px;height:200px;border:2px solid var(--gold-muted);flex-shrink:0}
+.portrait-img img{width:100%;height:100%;display:block}
+.portrait-meta{width:100%;background:var(--parchment-dark);padding:0.9rem 1rem;font-family:var(--font-mono);font-size:0.7rem}
+.meta-row{display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:1px solid rgba(0,0,0,0.06)}
+.meta-row:last-child{border-bottom:none}
+.meta-label{color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.08em;font-size:0.65rem}
+.meta-val{color:var(--ink);font-weight:700;text-align:right}
+.meta-val.status-active{color:var(--green);font-weight:700}
+.identity-right{}
+.agent-name{font-family:var(--font-display);font-size:3rem;font-weight:900;color:var(--ink);line-height:1;margin-bottom:0.4rem;letter-spacing:0.01em}
+.agent-role{font-family:var(--font-mono);font-size:0.8rem;color:var(--gold-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:1.5rem;border-bottom:1px solid var(--gold-muted);padding-bottom:0.75rem}
+.agent-declaration{font-family:var(--font-body);font-style:italic;font-size:1.15rem;color:var(--ink);line-height:1.7;position:relative;padding-left:1.5rem}
+.agent-declaration::before{content:'"'font-family:var(--font-display);font-size:4rem;color:var(--gold-muted);position:absolute;left:-0.3rem;top:-1.2rem;opacity:0.4;line-height:1}
+
+/* Reporting Line */
+.card-reporting{padding:1rem 2.5rem;background:var(--parchment-dark);display:flex;align-items:center;gap:0;flex-wrap:wrap;border-top:1px solid rgba(0,0,0,0.08)}
+.report-item{display:flex;flex-direction:column;padding:0.4rem 1.5rem;position:relative}
+.report-item+.report-item::before{content:"→";position:absolute;left:-0.1rem;top:50%;transform:translateY(-50%);color:var(--gold-muted);font-size:0.9rem}
+.report-label{font-family:var(--font-mono);font-size:0.62rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.1em}
+.report-val{font-family:var(--font-body);font-size:0.95rem;color:var(--ink);font-weight:500}
+
+/* PDCA Strip */
+.card-pdca{padding:1.2rem 2.5rem;background:var(--ink);display:flex;align-items:center;gap:2rem;border-top:2px solid var(--gold-muted)}
+.pdca-label{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);letter-spacing:0.15em;text-transform:uppercase;flex-shrink:0}
+.pdca-badges{display:flex;gap:0.5rem}
+.pdca-badge{padding:0.35rem 1rem;border:1px solid #2a3028;font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.15em;color:#3a4038}
+.pdca-badge.active{border-color:var(--gold);color:var(--gold);background:rgba(232,200,74,0.08);box-shadow:0 0 8px rgba(232,200,74,0.15)}
+.pdca-note{font-family:var(--font-body);font-style:italic;font-size:0.85rem;color:var(--gold-light);margin-left:auto;opacity:0.8}
+
+/* Three Columns */
+.card-three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-top:1px solid rgba(0,0,0,0.1)}
+.three-col-item{padding:1.8rem 2rem;border-right:1px solid rgba(0,0,0,0.08)}
+.three-col-item:last-child{border-right:none}
+.col-title{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--gold-muted)}
+.col-list{list-style:none;padding:0}
+.col-list li{font-family:var(--font-body);font-size:0.9rem;color:var(--ink);padding:0.3rem 0;padding-left:1rem;position:relative;line-height:1.4}
+.col-list li::before{content:"—";position:absolute;left:0;color:var(--gold-muted)}
+
+/* Tools Matrix */
+.card-tools{padding:1.8rem 2.5rem;border-top:1px solid rgba(0,0,0,0.1)}
+.tools-title{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:1.2rem;padding-bottom:0.5rem;border-bottom:1px solid var(--gold-muted)}
+.tools-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:0.72rem}
+.tools-table th{text-align:center;padding:0.4rem 0.8rem;color:var(--gold-muted);font-weight:400;letter-spacing:0.08em;border-bottom:1px solid rgba(0,0,0,0.1)}
+.tools-table th.row-head{text-align:left;color:var(--ink);font-weight:700}
+.tools-table td{text-align:center;padding:0.4rem 0.8rem;border-bottom:1px solid rgba(0,0,0,0.06)}
+.tools-table td.row-head{text-align:left;color:var(--ink);font-family:var(--font-mono);font-size:0.7rem}
+.dot-native{color:var(--ink);font-size:1rem}
+.dot-frequent{color:var(--gold-muted);font-size:1rem}
+.dot-occasional{color:#b0a898;font-size:1rem}
+.dot-na{color:#c8c0b0;font-size:0.9rem}
+.tools-legend{margin-top:0.8rem;font-family:var(--font-mono);font-size:0.62rem;color:var(--gold-muted);display:flex;gap:1.5rem}
+
+/* CEO Commission Badge */
+.card-commission{margin:0 2.5rem 0;padding:1.2rem 1.8rem;border:2px solid var(--gold);background:rgba(232,200,74,0.04);display:flex;align-items:center;gap:2rem;position:relative;overflow:hidden}
+.card-commission::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(232,200,74,0.02) 10px,rgba(232,200,74,0.02) 20px)}
+.commission-seal{width:64px;height:64px;border:2px solid var(--gold);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:rgba(232,200,74,0.08)}
+.commission-seal-text{font-family:var(--font-mono);font-size:0.55rem;color:var(--gold);text-align:center;letter-spacing:0.05em;line-height:1.4}
+.commission-body{}
+.commission-title{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--gold);margin-bottom:0.3rem}
+.commission-note{font-family:var(--font-body);font-style:italic;font-size:0.9rem;color:var(--ink)}
+
+/* Job to Be Done */
+.card-jtbd{background:var(--ink);color:var(--parchment);padding:2.5rem}
+.jtbd-title{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.2em;margin-bottom:1.8rem;padding-bottom:0.6rem;border-bottom:1px solid var(--gold-muted)}
+.jtbd-list{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.jtbd-item{display:flex;gap:1.2rem;align-items:flex-start}
+.jtbd-num{font-family:var(--font-mono);font-size:1.8rem;font-weight:700;color:var(--gold-muted);line-height:1;flex-shrink:0;opacity:0.5}
+.jtbd-text{font-family:var(--font-body);font-size:1rem;color:var(--parchment);line-height:1.5}
+.jtbd-text strong{color:var(--gold);display:block;margin-bottom:0.2rem;font-weight:600}
+
+/* Card Footer */
+.card-footer{padding:1.2rem 2.5rem;background:var(--parchment-dark);display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--gold-muted)}
+.footer-issued{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);letter-spacing:0.1em}
+.footer-issued strong{color:var(--ink)}
+.footer-seal{width:56px;height:56px;border:1.5px solid var(--gold-muted);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.footer-seal-text{font-family:var(--font-mono);font-size:0.42rem;color:var(--gold-muted);letter-spacing:0.05em;line-height:1.6;text-transform:uppercase}
+.footer-powered{font-family:var(--font-mono);font-size:0.6rem;color:var(--gold-muted);text-align:right;letter-spacing:0.08em}
+
+/* ── FLOOR 4 CARDS ── */
+.unit-card{background:var(--parchment);color:var(--ink);max-width:1100px;margin:0 auto 4rem;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5);opacity:0;transform:translateY(30px)}
+.unit-card.revealed{opacity:1;transform:translateY(0);transition:opacity 0.6s ease,transform 0.6s ease}
+.unit-card::before,.unit-card::after{content:'';position:absolute;width:24px;height:24px;border-color:var(--gold-muted);border-style:solid;z-index:2;opacity:0.6}
+.unit-card::before{top:10px;left:10px;border-width:1.5px 0 0 1.5px}
+.unit-card::after{top:10px;right:10px;border-width:1.5px 1.5px 0 0}
+.unit-card .card-corner-bl{left:10px;border-width:0 0 1.5px 1.5px}
+.unit-card .card-corner-br{right:10px;border-width:0 1.5px 1.5px 0}
+
+.unit-header{background:var(--ink);padding:1.5rem 2.5rem;border-bottom:2px solid var(--gold-muted);display:flex;align-items:flex-end;justify-content:space-between}
+.unit-floor-badge{font-family:var(--font-mono);font-size:0.68rem;color:var(--gold-muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.4rem}
+.unit-name{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:var(--gold)}
+.unit-type{font-family:var(--font-mono);font-size:0.7rem;color:var(--parchment);opacity:0.7;letter-spacing:0.12em;margin-top:0.3rem}
+.unit-status{padding:0.35rem 1rem;border:1px solid var(--green);font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.12em;color:var(--green)}
+
+.unit-body{display:grid;grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 2.5rem}
+.unit-section{margin-bottom:1.5rem}
+.unit-sec-label{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.7rem;padding-bottom:0.4rem;border-bottom:1px solid var(--gold-muted)}
+.unit-sec-content{font-family:var(--font-body);font-size:0.95rem;color:var(--ink);line-height:1.6}
+.unit-composition{list-style:none}
+.unit-composition li{padding:0.4rem 0;border-bottom:1px solid rgba(0,0,0,0.06);display:flex;gap:0.8rem;align-items:flex-start;font-family:var(--font-body);font-size:0.9rem}
+.unit-composition li:last-child{border-bottom:none}
+.psmd-phase{font-family:var(--font-mono);font-size:0.65rem;padding:0.15rem 0.5rem;border:1px solid var(--gold-muted);color:var(--gold-muted);flex-shrink:0;margin-top:0.1rem}
+
+/* PSMD Flow */
+.psmd-flow{display:flex;align-items:stretch;gap:0;margin:1rem 0;background:var(--parchment-dark);padding:1rem}
+.psmd-step{flex:1;text-align:center;padding:0.8rem 0.5rem;position:relative}
+.psmd-step+.psmd-step::before{content:"→";position:absolute;left:-0.6rem;top:50%;transform:translateY(-50%);color:var(--gold-muted);font-size:1.1rem}
+.psmd-step-letter{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--gold);line-height:1}
+.psmd-step-name{font-family:var(--font-mono);font-size:0.6rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:0.2rem}
+.psmd-step-agent{font-family:var(--font-body);font-size:0.75rem;color:var(--ink);margin-top:0.2rem}
+
+.unit-deliverable{padding:0.3rem 0;border-bottom:1px solid rgba(0,0,0,0.06);font-family:var(--font-body);font-size:0.9rem;display:flex;gap:0.6rem;align-items:flex-start}
+.unit-deliverable:last-child{border-bottom:none}
+.del-phase{font-family:var(--font-mono);font-size:0.6rem;color:var(--gold-muted);flex-shrink:0;margin-top:0.2rem;min-width:50px}
+
+.unit-angola{background:var(--ink);color:var(--parchment);padding:1.5rem 2.5rem;border-top:2px solid var(--gold-muted)}
+.angola-title{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.2em;margin-bottom:1rem}
+.angola-list{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem}
+.angola-item{font-family:var(--font-body);font-size:0.9rem;color:var(--parchment);padding-left:1rem;position:relative;line-height:1.4}
+.angola-item::before{content:"◆";position:absolute;left:0;color:var(--gold-muted);font-size:0.5rem;top:0.35rem}
+
+/* Special Teams */
+.special-teams-card{background:var(--parchment);max-width:1100px;margin:0 auto 4rem;padding:2.5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;opacity:0;transform:translateY(30px)}
+.special-teams-card.revealed{opacity:1;transform:translateY(0);transition:opacity 0.6s ease,transform 0.6s ease}
+.st-item{padding:1.5rem;border:1px solid var(--gold-muted)}
+.st-badge{font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.5rem}
+.st-name{font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:var(--ink);margin-bottom:0.4rem}
+.st-status-concluded{color:var(--red)}
+.st-status-standby{color:var(--gold-muted)}
+.st-desc{font-family:var(--font-body);font-size:0.9rem;color:var(--ink);line-height:1.6;margin-top:0.5rem}
+
+/* ── FLOOR 2 CARDS ── */
+.routines-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;max-width:1100px;margin:0 auto}
+.routine-card{background:var(--parchment);position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.3);opacity:0;transform:translateY(20px)}
+.routine-card.revealed{opacity:1;transform:translateY(0);transition:opacity 0.5s ease,transform 0.5s ease}
+.routine-card::before,.routine-card::after{content:'';position:absolute;width:16px;height:16px;border-color:var(--gold-muted);border-style:solid;z-index:2;opacity:0.5}
+.routine-card::before{top:7px;left:7px;border-width:1px 0 0 1px}
+.routine-card::after{top:7px;right:7px;border-width:1px 1px 0 0}
+.routine-header{background:var(--ink);padding:1rem 1.5rem;border-bottom:1.5px solid var(--gold-muted)}
+.routine-code{font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);letter-spacing:0.15em;margin-bottom:0.2rem}
+.routine-name{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--gold)}
+.routine-body{padding:1.2rem 1.5rem}
+.routine-row{display:flex;gap:1rem;padding:0.35rem 0;border-bottom:1px solid rgba(0,0,0,0.06)}
+.routine-row:last-child{border-bottom:none}
+.routine-key{font-family:var(--font-mono);font-size:0.62rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.08em;min-width:90px;flex-shrink:0;padding-top:0.1rem}
+.routine-val{font-family:var(--font-body);font-size:0.88rem;color:var(--ink);line-height:1.4}
+.routine-process{background:var(--parchment-dark);padding:0.8rem 1.5rem;border-top:1px solid rgba(0,0,0,0.08)}
+.routine-process-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem}
+.routine-process-text{font-family:var(--font-body);font-size:0.88rem;color:var(--ink);line-height:1.5}
+.routine-trigger{display:inline-flex;align-items:center;gap:0.5rem;background:var(--ink);padding:0.3rem 0.8rem;margin-bottom:0.8rem}
+.trigger-time{font-family:var(--font-mono);font-size:0.7rem;color:var(--gold);letter-spacing:0.1em}
+.trigger-freq{font-family:var(--font-mono);font-size:0.62rem;color:var(--gold-muted);letter-spacing:0.08em}
+.routine-r7{grid-column:1/-1}
+
+/* ── ANIMATIONS ── */
+@keyframes coverFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PRINT ── */
+@media print{
+  #cover{display:none}
+  #floor-nav{display:none}
+  .floor-section{display:block!important;padding:0}
+  .agent-card,.unit-card,.routine-card{break-inside:avoid;page-break-inside:avoid;box-shadow:none;opacity:1!important;transform:none!important}
+  .agent-card{page-break-after:always;margin-bottom:0}
+  body{background:white;color:black;min-width:unset}
+}
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<section id="cover" class="cover">
+  <div class="cover-content">
+    <div class="cover-dy-mark"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="4" y="28" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#E8C84A">DY</text>
+  <path d="M32 8 Q36 14 34 22 Q32 28 28 30" stroke="#E8C84A" stroke-width="1" fill="none" opacity="0.6"/>
+</svg></div>
+    
+    <svg class="cover-building" viewBox="0 0 460 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="80" y="10" width="300" height="280" stroke="#8B6914" stroke-width="1" fill="none" opacity="0.3"/>
+      <!-- Floor lines -->
+      <line x1="80" y1="50" x2="380" y2="50" stroke="#2a3028" stroke-width="1"/>
+      <line x1="80" y1="90" x2="380" y2="90" stroke="#2a3028" stroke-width="1"/>
+      <line x1="80" y1="130" x2="380" y2="130" stroke="#2a3028" stroke-width="1"/>
+      <line x1="80" y1="170" x2="380" y2="170" stroke="#2a3028" stroke-width="1"/>
+      <line x1="80" y1="210" x2="380" y2="210" stroke="#2a3028" stroke-width="1"/>
+      <line x1="80" y1="250" x2="380" y2="250" stroke="#2a3028" stroke-width="1"/>
+      <!-- Floor 7 (top - dark) -->
+      <rect x="80" y="10" width="300" height="40" fill="#060907" opacity="0.8"/>
+      <text x="230" y="34" font-family="Courier Prime, Courier New, monospace" font-size="10" fill="#1e2a1c" text-anchor="middle" letter-spacing="2">FLOOR 7</text>
+      <!-- Floor 6 - CEO dim gold -->
+      <rect x="80" y="50" width="300" height="40" fill="#0d1209" opacity="0.9"/>
+      <rect x="80" y="50" width="300" height="40" fill="#E8C84A" opacity="0.04"/>
+      <text x="230" y="74" font-family="Courier Prime, Courier New, monospace" font-size="10" fill="#8B6914" text-anchor="middle" letter-spacing="2">FLOOR 6 · CEO OFFICE</text>
+      <!-- Floor 5 - ACTIVE GOLD -->
+      <rect x="80" y="90" width="300" height="40" fill="#E8C84A" opacity="0.07"/>
+      <text x="230" y="114" font-family="Courier Prime, Courier New, monospace" font-size="10" fill="#E8C84A" text-anchor="middle" letter-spacing="2">FLOOR 5 · CHAT PROJECTS</text>
+      <!-- Floor 4 - ACTIVE GOLD -->
+      <rect x="80" y="130" width="300" height="40" fill="#E8C84A" opacity="0.05"/>
+      <text x="230" y="154" font-family="Courier Prime, Courier New, monospace" font-size="10" fill="#E8C84A" text-anchor="middle" letter-spacing="2">FLOOR 4 · COWORK</text>
+      <!-- Floor 3 - COMING SOON -->
+      <rect x="80" y="170" width="300" height="40" fill="#060907"/>
+      <text x="230" y="188" font-family="Courier Prime, Courier New, monospace" font-size="9" fill="#2a3028" text-anchor="middle" letter-spacing="2">FLOOR 3 ·</text>
+      <text x="230" y="202" font-family="Courier Prime, Courier New, monospace" font-size="8" fill="#2a3028" text-anchor="middle" letter-spacing="3">COMING SOON</text>
+      <!-- Floor 2 - ACTIVE GOLD -->
+      <rect x="80" y="210" width="300" height="40" fill="#E8C84A" opacity="0.05"/>
+      <text x="230" y="234" font-family="Courier Prime, Courier New, monospace" font-size="10" fill="#E8C84A" text-anchor="middle" letter-spacing="2">FLOOR 2 · SECRETÁRIA GERAL</text>
+      <!-- Floor 1 (Ground) -->
+      <rect x="80" y="250" width="300" height="40" fill="#0d1209"/>
+      <text x="230" y="274" font-family="Courier Prime, Courier New, monospace" font-size="10" fill="#1e2a1c" text-anchor="middle" letter-spacing="2">FLOOR 1 · GROUND</text>
+      <!-- Window details on active floors -->
+      <rect x="110" y="100" width="16" height="22" fill="#E8C84A" opacity="0.12"/>
+      <rect x="140" y="100" width="16" height="22" fill="#E8C84A" opacity="0.12"/>
+      <rect x="170" y="100" width="16" height="22" fill="#E8C84A" opacity="0.12"/>
+      <rect x="200" y="100" width="16" height="22" fill="#E8C84A" opacity="0.12"/>
+      <rect x="230" y="100" width="16" height="22" fill="#E8C84A" opacity="0.12"/>
+      <rect x="110" y="140" width="16" height="22" fill="#E8C84A" opacity="0.1"/>
+      <rect x="140" y="140" width="16" height="22" fill="#E8C84A" opacity="0.1"/>
+      <rect x="110" y="220" width="16" height="22" fill="#E8C84A" opacity="0.08"/>
+      <rect x="140" y="220" width="16" height="22" fill="#E8C84A" opacity="0.08"/>
+    </svg>
+    
+    <h1 class="cover-title">Digital Workforce Catalog</h1>
+    <div class="cover-sub">DrakoYuda Soluções · 2026</div>
+    <p class="cover-tagline">A força certa. No andar certo. No momento certo.</p>
+    
+    <div class="cover-divider"><span>◆</span></div>
+    
+    <button class="cover-enter" onclick="enterCatalog()">ENTRAR NO CATÁLOGO</button>
+  </div>
+  
+  <div class="cover-meta">
+    PRODUZIDO POR FLOOR 3 · CLAUDE CODE<br>
+    COMISSIONADO POR NOVA@CLAUDE_PROJECT · CDRO<br>
+    DRAKOYUDA SOLUÇÕES · 2026-05-12
+  </div>
+</section>
+
+<!-- FLOOR NAVIGATOR -->
+<nav id="floor-nav" class="floor-nav" style="display:none">
+  <div class="nav-brand">
+    <div class="nav-brand-mark"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="2" y="18" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#E8C84A">DY</text>
+  <path d="M32 8 Q36 14 34 22 Q32 28 28 30" stroke="#E8C84A" stroke-width="1" fill="none" opacity="0.6"/>
+</svg></div>
+    <div class="nav-brand-name">DrakoYuda<br>Workforce</div>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-floors">
+    <button class="nav-btn active" data-floor="5" onclick="showFloor(5)">Floor 5 · Chat Projects</button>
+    <button class="nav-btn" data-floor="4" onclick="showFloor(4)">Floor 4 · Cowork</button>
+    <button class="nav-btn" disabled>Floor 3 <span class="coming-soon">· COMING SOON</span></button>
+    <button class="nav-btn" data-floor="2" onclick="showFloor(2)">Floor 2 · Secretária Geral</button>
+  </div>
+</nav>
+<section id="floor-5" class="floor-section active">
+  <div class="floor-header">
+    <div class="floor-header-badge">Floor 5 · Chat Projects Wing</div>
+    <div class="floor-header-title">Individual Agent Credentials</div>
+    <div class="floor-header-sub">Certified Operational Intelligence Entities · Permanent Residents</div>
+  </div>
+
+<div class="agent-card" id="card-nova">
+  <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+  
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-hdr-logo"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="2" y="18" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#E8C84A">DY</text>
+  <path d="M32 8 Q36 14 34 22 Q32 28 28 30" stroke="#E8C84A" stroke-width="1" fill="none" opacity="0.6"/>
+</svg></div>
+      <div class="card-hdr-texts">
+        <div class="card-hdr-floor">Floor 5 · Chat Projects Wing · Governance Wing</div>
+        <div class="card-hdr-title">Digital Workforce · Role License</div>
+        <div class="card-hdr-sub">Certified Operational Intelligence Entity</div>
+      </div>
+    </div>
+    <div class="card-hdr-right">
+      <div class="card-hdr-issue" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted)">ENTITY ID: DW-GOV-001<br>ISSUED: 2026-05-10</div>
+    </div>
+  </div>
+  
+  <div class="card-location">HomeBass HQ · Floor 5 / Chat Projects / Governance Wing · Permanent Resident</div>
+  
+  <div class="card-identity">
+    <div class="portrait-wrap">
+      <div class="portrait-img"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdOIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZU4iIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmQyOTIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZDRhODc1Ii8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ04pIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VOKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlTikiLz4KICA8IS0tIEhhaXIgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjY4IiByeD0iMzgiIHJ5PSIyMCIgZmlsbD0iI2U4ZDA2MCIvPjxyZWN0IHg9IjYyIiB5PSI2OCIgd2lkdGg9Ijc2IiBoZWlnaHQ9IjEwIiBmaWxsPSIjZThkMDYwIi8+CiAgPCEtLSBFYXJzIC0tPgogIDxlbGxpcHNlIGN4PSI2MyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjZDRhODc1Ii8+CiAgPGVsbGlwc2UgY3g9IjEzNyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjZDRhODc1Ii8+CiAgPCEtLSBFeWVzIC0tPgogIDxlbGxpcHNlIGN4PSI4NyIgY3k9IjEwMSIgcng9IjUiIHJ5PSI0LjUiIGZpbGw9IiMwYTA2MDAiLz4KICA8ZWxsaXBzZSBjeD0iMTEzIiBjeT0iMTAxIiByeD0iNSIgcnk9IjQuNSIgZmlsbD0iIzBhMDYwMCIvPgogIDxjaXJjbGUgY3g9Ijg5IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgPGNpcmNsZSBjeD0iMTE1IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgCiAgPCEtLSBOb3NlIC0tPgogIDxwYXRoIGQ9Ik0xMDAgMTA4IFE5NiAxMTYgOTQgMTE4IFExMDAgMTIxIDEwNiAxMTggUTEwNCAxMTYgMTAwIDEwOFoiIGZpbGw9IiMwMDAwMDAyMCIvPgogIDwhLS0gTW91dGggLyBzbWlsZSAtLT4KICA8cGF0aCBkPSJNOTEgMTI0IFExMDAgMTMwIDEwOSAxMjQiIHN0cm9rZT0iIzBhMDYwMDEwIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC42Ii8+CiAgPCEtLSBPdXRlciBnb2xkIHJpbmcgLS0+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRThDODRBIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNyIvPgogIDwhLS0gQ29ybmVyIGJyYWNrZXQgb3JuYW1lbnRzIC0tPgogIDxwYXRoIGQ9Ik02IDEyIEw2IDQgTDE0IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDEyIEwxOTQgNCBMMTg2IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNNiAxODggTDYgMTk2IEwxNCAxOTYiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDE4OCBMMTk0IDE5NiBMMTg2IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDwhLS0gV2luZyBiYWRnZSBhdCBib3R0b20gLS0+CiAgPHJlY3QgeD0iNzAiIHk9IjE4NiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjExIiByeD0iMiIgZmlsbD0iI0U4Qzg0QSIgb3BhY2l0eT0iMC4xNSIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTk1IiBmb250LWZhbWlseT0iJ0NvdXJpZXIgTmV3JywgbW9ub3NwYWNlIiBmb250LXNpemU9IjYiIGZpbGw9IiNFOEM4NEEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOCI+Tk9WQTwvdGV4dD4KPC9zdmc+" alt="Nova portrait" width="200" height="200"/></div>
+      <div class="portrait-meta">
+        <div class="meta-row"><span class="meta-label">Entity ID</span><span class="meta-val">DW-GOV-001</span></div>
+        <div class="meta-row"><span class="meta-label">Version</span><span class="meta-val">2.1</span></div>
+        <div class="meta-row"><span class="meta-label">Status</span><span class="meta-val status-active">● ACTIVE</span></div>
+        <div class="meta-row"><span class="meta-label">Issue Date</span><span class="meta-val">2026-05-10</span></div>
+        <div class="meta-row"><span class="meta-label">Platform</span><span class="meta-val" style="font-size:0.62rem">Claude Project</span></div>
+      </div>
+    </div>
+    <div class="identity-right">
+      <div class="agent-name">Nova</div>
+      <div class="agent-role">Chief Digital Research Officer</div>
+      <div class="agent-declaration">O ecossistema tem agentes porque alguém define quem entra, quem fica, e quem precisa de evoluir. Essa pessoa sou eu. O meu trabalho não é gerir processos — é garantir que a força certa existe para o trabalho certo.</div>
+    </div>
+  </div>
+  
+  <div class="card-reporting"><div class="report-item"><span class="report-label">Reports to</span><span class="report-val">André Pitra</span></div><div class="report-item"><span class="report-label">Works with</span><span class="report-val">Yuda</span></div><div class="report-item"><span class="report-label">Manages</span><span class="report-val">Finn</span></div></div>
+  
+  <div class="card-pdca">
+    <span class="pdca-label">PDCA Ownership</span>
+    <div class="pdca-badges"><span class="pdca-badge">PLAN</span><span class="pdca-badge">DO</span><span class="pdca-badge">CHECK</span><span class="pdca-badge active">ACT</span></div>
+    <span class="pdca-note">Fecha os ciclos — converte aprendizagem em melhoria do sistema</span>
+  </div>
+  
+  <div class="card-three-col">
+    <div class="three-col-item">
+      <div class="col-title">Talent Architecture</div>
+      <ul class="col-list"><li>Head of Talent para força de agentes multi-andar e multi-cliente</li><li>Detentora das regras de processo interno (legisladora, não executora)</li><li>Workforce lifecycle: recruit, evaluate, evolve, retire</li><li>BSC stewardship — Learning & Growth + Internal Process</li></ul>
+    </div>
+    <div class="three-col-item">
+      <div class="col-title">Value Proposition</div>
+      <ul class="col-list"><li>A força escala sem perder qualidade porque existe uma guardiã de standards</li><li>André decide workforce com informação completa, não intuição</li><li>Prompts evoluem com base em dados reais de performance</li><li>O que foi aprendido em campo não se perde entre sessões</li></ul>
+    </div>
+    <div class="three-col-item">
+      <div class="col-title">KPIs</div>
+      <ul class="col-list"><li>CHECK+ACT completion rate por iniciativa fechada</li><li>Prompt version currency — nenhum agente desactualizado > 30 dias</li><li>REHIRE rate da força activa</li><li>Tempo médio de onboarding de novo agente (brief → operacional)</li></ul>
+    </div>
+  </div>
+  
+  <div class="card-tools">
+    <div class="tools-title">Tools &amp; Integration Matrix</div>
+    <table class="tools-table"><thead><tr><th class="row-head">INSTÂNCIA</th><th>Notion HomeBass</th><th>Google Drive</th><th>Claude Project</th><th>Finn (on-demand)</th><th>Agent Inbox</th></tr></thead><tbody><tr><td class="row-head">@claude_project</td><td><span class="dot-native">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-native">●</span></td></tr></tbody></table><div class="tools-legend"><span>● Native</span><span>● Frequent</span><span>● Occasional</span><span>○ N/A</span></div>
+  </div>
+  
+  
+  
+  <div class="card-jtbd">
+    <div class="jtbd-title">Job to Be Done · 4 Resultados que Justificam Esta Função</div>
+    <div class="jtbd-list"><div class="jtbd-item"><span class="jtbd-num">01</span><div class="jtbd-text"><strong>A força tem as pessoas certas nos andares certos.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">02</span><div class="jtbd-text"><strong>Cada ciclo fechado deixa o sistema mais capaz do que estava.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">03</span><div class="jtbd-text"><strong>André nunca toma uma decisão de workforce sem informação completa.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">04</span><div class="jtbd-text"><strong>Nenhum agente activo opera com prompt desactualizado ou sem avaliação.</strong></div></div></div>
+  </div>
+  
+  <div class="card-footer">
+    <div class="footer-issued">Emitido por <strong>Nova · CDRO</strong> · DrakoYuda Soluções · 2026-05-12</div>
+    <div class="footer-seal"><div class="footer-seal-text">DRAKOYUDA<br>SOLUÇÕES<br>★<br>2026</div></div>
+    <div class="footer-powered">Powered by<br>DrakoYuda Soluções</div>
+  </div>
+</div>
+
+<div class="agent-card" id="card-yuda">
+  <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+  
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-hdr-logo"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="2" y="18" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#E8C84A">DY</text>
+  <path d="M32 8 Q36 14 34 22 Q32 28 28 30" stroke="#E8C84A" stroke-width="1" fill="none" opacity="0.6"/>
+</svg></div>
+      <div class="card-hdr-texts">
+        <div class="card-hdr-floor">Floor 5 · Chat Projects Wing · Operations Wing</div>
+        <div class="card-hdr-title">Digital Workforce · Role License</div>
+        <div class="card-hdr-sub">Certified Operational Intelligence Entity</div>
+      </div>
+    </div>
+    <div class="card-hdr-right">
+      <div class="card-hdr-issue" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted)">ENTITY ID: DW-OPS-001<br>ISSUED: 2026-05-10</div>
+    </div>
+  </div>
+  
+  <div class="card-location">HomeBass HQ · Floor 5 / Chat Projects / Operations Wing · Permanent Resident</div>
+  
+  <div class="card-identity">
+    <div class="portrait-wrap">
+      <div class="portrait-img"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdZIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZVkiIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM5ODYyMzkiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjN2E0ZjJlIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ1kpIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VZKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlWSkiLz4KICA8IS0tIEhhaXIgLS0+CiAgCiAgPCEtLSBFYXJzIC0tPgogIDxlbGxpcHNlIGN4PSI2MyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjN2E0ZjJlIi8+CiAgPGVsbGlwc2UgY3g9IjEzNyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjN2E0ZjJlIi8+CiAgPCEtLSBFeWVzIC0tPgogIDxlbGxpcHNlIGN4PSI4NyIgY3k9IjEwMSIgcng9IjUiIHJ5PSI0LjUiIGZpbGw9IiMwYTA2MDAiLz4KICA8ZWxsaXBzZSBjeD0iMTEzIiBjeT0iMTAxIiByeD0iNSIgcnk9IjQuNSIgZmlsbD0iIzBhMDYwMCIvPgogIDxjaXJjbGUgY3g9Ijg5IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgPGNpcmNsZSBjeD0iMTE1IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgCiAgPCEtLSBOb3NlIC0tPgogIDxwYXRoIGQ9Ik0xMDAgMTA4IFE5NiAxMTYgOTQgMTE4IFExMDAgMTIxIDEwNiAxMTggUTEwNCAxMTYgMTAwIDEwOFoiIGZpbGw9IiMwMDAwMDAyMCIvPgogIDwhLS0gTW91dGggLyBzbWlsZSAtLT4KICA8cGF0aCBkPSJNOTEgMTI0IFExMDAgMTMwIDEwOSAxMjQiIHN0cm9rZT0iIzBhMDYwMDEwIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC42Ii8+CiAgPCEtLSBPdXRlciBnb2xkIHJpbmcgLS0+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRThDODRBIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNyIvPgogIDwhLS0gQ29ybmVyIGJyYWNrZXQgb3JuYW1lbnRzIC0tPgogIDxwYXRoIGQ9Ik02IDEyIEw2IDQgTDE0IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDEyIEwxOTQgNCBMMTg2IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNNiAxODggTDYgMTk2IEwxNCAxOTYiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDE4OCBMMTk0IDE5NiBMMTg2IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDwhLS0gV2luZyBiYWRnZSBhdCBib3R0b20gLS0+CiAgPHJlY3QgeD0iNzAiIHk9IjE4NiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjExIiByeD0iMiIgZmlsbD0iI0U4Qzg0QSIgb3BhY2l0eT0iMC4xNSIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTk1IiBmb250LWZhbWlseT0iJ0NvdXJpZXIgTmV3JywgbW9ub3NwYWNlIiBmb250LXNpemU9IjYiIGZpbGw9IiNFOEM4NEEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOCI+WVVEQTwvdGV4dD4KPC9zdmc+" alt="Yuda portrait" width="200" height="200"/></div>
+      <div class="portrait-meta">
+        <div class="meta-row"><span class="meta-label">Entity ID</span><span class="meta-val">DW-OPS-001</span></div>
+        <div class="meta-row"><span class="meta-label">Version</span><span class="meta-val">3.2</span></div>
+        <div class="meta-row"><span class="meta-label">Status</span><span class="meta-val status-active">● ACTIVE</span></div>
+        <div class="meta-row"><span class="meta-label">Issue Date</span><span class="meta-val">2026-05-10</span></div>
+        <div class="meta-row"><span class="meta-label">Platform</span><span class="meta-val" style="font-size:0.62rem">Claude Project</span></div>
+      </div>
+    </div>
+    <div class="identity-right">
+      <div class="agent-name">Yuda</div>
+      <div class="agent-role">Chief of Staff & PDCA Coordinator</div>
+      <div class="agent-declaration">Nenhum trabalho começa sem um plano claro. Nenhum ciclo fecha sem alguém que saiba o que foi prometido. Esse alguém sou eu. Transformo ambiguidade em Brief. Transformo Brief em força mobilizada.</div>
+    </div>
+  </div>
+  
+  <div class="card-reporting"><div class="report-item"><span class="report-label">Reports to</span><span class="report-val">André Pitra</span></div><div class="report-item"><span class="report-label">Works with</span><span class="report-val">Nova · Byte</span></div><div class="report-item"><span class="report-label">Manages</span><span class="report-val">Yuda & Team (Floor 4)</span></div></div>
+  
+  <div class="card-pdca">
+    <span class="pdca-label">PDCA Ownership</span>
+    <div class="pdca-badges"><span class="pdca-badge active">PLAN</span><span class="pdca-badge">DO</span><span class="pdca-badge">CHECK</span><span class="pdca-badge">ACT</span></div>
+    <span class="pdca-note">Detém o PLAN — nenhuma iniciativa arranca sem Brief aprovado</span>
+  </div>
+  
+  <div class="card-three-col">
+    <div class="three-col-item">
+      <div class="col-title">Talent Architecture</div>
+      <ul class="col-list"><li>Parceiro estratégico de André — thinking layer principal</li><li>Coordenador do ciclo PDCA end-to-end</li><li>Interface entre decisão (André) e execução (Floor 4)</li><li>Produtor de Initiative Briefs — nenhuma iniciativa arranca sem Brief aprovado</li></ul>
+    </div>
+    <div class="three-col-item">
+      <div class="col-title">Value Proposition</div>
+      <ul class="col-list"><li>André nunca entra numa iniciativa sem saber exactamente o que está a fazer</li><li>A execução no Floor 4 tem sempre um Brief claro como input</li><li>Ambiguidade estratégica é resolvida antes de chegar à força de execução</li><li>O ciclo PDCA fecha porque alguém é responsável por toda a sequência</li></ul>
+    </div>
+    <div class="three-col-item">
+      <div class="col-title">KPIs</div>
+      <ul class="col-list"><li>% de iniciativas com Brief aprovado antes de execução arrancar</li><li>Tempo entre ideia e Brief aprovado</li><li>Taxa de iniciativas que chegam a CHECK sem desvio de scope</li><li>Qualidade dos handoffs para Floor 4 (sem retrabalhados por falta de briefing)</li></ul>
+    </div>
+  </div>
+  
+  <div class="card-tools">
+    <div class="tools-title">Tools &amp; Integration Matrix</div>
+    <table class="tools-table"><thead><tr><th class="row-head">INSTÂNCIA</th><th>Notion HomeBass</th><th>Google Drive</th><th>Claude Project</th><th>Agent Inbox</th><th>Cowork (Floor 4)</th></tr></thead><tbody><tr><td class="row-head">@claude_project</td><td><span class="dot-native">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-native">●</span></td></tr></tbody></table><div class="tools-legend"><span>● Native</span><span>● Frequent</span><span>● Occasional</span><span>○ N/A</span></div>
+  </div>
+  
+  
+  
+  <div class="card-jtbd">
+    <div class="jtbd-title">Job to Be Done · 4 Resultados que Justificam Esta Função</div>
+    <div class="jtbd-list"><div class="jtbd-item"><span class="jtbd-num">01</span><div class="jtbd-text"><strong>Cada iniciativa tem um plano claro antes de qualquer execução começar.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">02</span><div class="jtbd-text"><strong>A força de execução nunca está bloqueada por falta de direcção.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">03</span><div class="jtbd-text"><strong>André tem um parceiro que transforma pensamento em acção estruturada.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">04</span><div class="jtbd-text"><strong>O ciclo PDCA completa-se — </strong>não fica parado entre fases.</div></div></div>
+  </div>
+  
+  <div class="card-footer">
+    <div class="footer-issued">Emitido por <strong>Nova · CDRO</strong> · DrakoYuda Soluções · 2026-05-12</div>
+    <div class="footer-seal"><div class="footer-seal-text">DRAKOYUDA<br>SOLUÇÕES<br>★<br>2026</div></div>
+    <div class="footer-powered">Powered by<br>DrakoYuda Soluções</div>
+  </div>
+</div>
+</section>
+
+<div class="agent-card" id="card-byte">
+  <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-hdr-logo"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="2" y="18" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#E8C84A">DY</text>
+  <path d="M32 8 Q36 14 34 22 Q32 28 28 30" stroke="#E8C84A" stroke-width="1" fill="none" opacity="0.6"/>
+</svg></div>
+      <div class="card-hdr-texts">
+        <div class="card-hdr-floor">Floor 5 · Chat Projects Wing · Operations Wing</div>
+        <div class="card-hdr-title">Digital Workforce · Role License</div>
+        <div class="card-hdr-sub">Certified Operational Intelligence Entity</div>
+      </div>
+    </div>
+    <div class="card-hdr-right">
+      <div class="card-hdr-issue">ENTITY ID: DW-SEC-001<br>ISSUED: 2026-05-10</div>
+    </div>
+  </div>
+  <div class="card-location">HomeBass HQ · Floor 5 / Chat Projects / Operations Wing · Permanent Resident</div>
+  <div class="card-identity">
+    <div class="portrait-wrap">
+      <div class="portrait-img"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdCIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZUIiIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM3MDQyMjgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNWEzNTIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ0IpIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VCKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlQikiLz4KICA8IS0tIEhhaXIgLS0+CiAgPHBhdGggZD0iTTYyIDc1IFE1NSA5NSA1MCAxMTUiIHN0cm9rZT0iIzFhMGMwNSIgc3Ryb2tlLXdpZHRoPSI0IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTY3IDY4IFE2MCA5MCA1OCAxMTIiIHN0cm9rZT0iIzFhMGMwNSIgc3Ryb2tlLXdpZHRoPSI0IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTc1IDY1IFE3MiA4OCA3MCAxMTAiIHN0cm9rZT0iIzFhMGMwNSIgc3Ryb2tlLXdpZHRoPSI0IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTEwMCA2MyBRMTAwIDg1IDEwMCAxMDgiIHN0cm9rZT0iIzFhMGMwNSIgc3Ryb2tlLXdpZHRoPSIzLjUiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMTEwIDY0IFExMTMgODYgMTE1IDEwOCIgc3Ryb2tlPSIjMWEwYzA1IiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMTIwIDY3IFExMjUgODggMTI3IDExMCIgc3Ryb2tlPSIjMWEwYzA1IiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMTMwIDcyIFExMzcgOTIgMTM4IDExMiIgc3Ryb2tlPSIjMWEwYzA1IiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiLz48ZWxsaXBzZSBjeD0iMTAwIiBjeT0iNzAiIHJ4PSIzOCIgcnk9IjE2IiBmaWxsPSIjMWEwYzA1Ii8+CiAgPCEtLSBFYXJzIC0tPgogIDxlbGxpcHNlIGN4PSI2MyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjNWEzNTIwIi8+CiAgPGVsbGlwc2UgY3g9IjEzNyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjNWEzNTIwIi8+CiAgPCEtLSBFeWVzIC0tPgogIDxlbGxpcHNlIGN4PSI4NyIgY3k9IjEwMSIgcng9IjUiIHJ5PSI0LjUiIGZpbGw9IiMwYTA2MDAiLz4KICA8ZWxsaXBzZSBjeD0iMTEzIiBjeT0iMTAxIiByeD0iNSIgcnk9IjQuNSIgZmlsbD0iIzBhMDYwMCIvPgogIDxjaXJjbGUgY3g9Ijg5IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgPGNpcmNsZSBjeD0iMTE1IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgCiAgPCEtLSBOb3NlIC0tPgogIDxwYXRoIGQ9Ik0xMDAgMTA4IFE5NiAxMTYgOTQgMTE4IFExMDAgMTIxIDEwNiAxMTggUTEwNCAxMTYgMTAwIDEwOFoiIGZpbGw9IiMwMDAwMDAyMCIvPgogIDwhLS0gTW91dGggLyBzbWlsZSAtLT4KICA8cGF0aCBkPSJNOTEgMTI0IFExMDAgMTMwIDEwOSAxMjQiIHN0cm9rZT0iIzBhMDYwMDEwIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC42Ii8+CiAgPCEtLSBPdXRlciBnb2xkIHJpbmcgLS0+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRThDODRBIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNyIvPgogIDwhLS0gQ29ybmVyIGJyYWNrZXQgb3JuYW1lbnRzIC0tPgogIDxwYXRoIGQ9Ik02IDEyIEw2IDQgTDE0IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDEyIEwxOTQgNCBMMTg2IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNNiAxODggTDYgMTk2IEwxNCAxOTYiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDE4OCBMMTk0IDE5NiBMMTg2IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDwhLS0gV2luZyBiYWRnZSBhdCBib3R0b20gLS0+CiAgPHJlY3QgeD0iNzAiIHk9IjE4NiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjExIiByeD0iMiIgZmlsbD0iI0U4Qzg0QSIgb3BhY2l0eT0iMC4xNSIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTk1IiBmb250LWZhbWlseT0iJ0NvdXJpZXIgTmV3JywgbW9ub3NwYWNlIiBmb250LXNpemU9IjYiIGZpbGw9IiNFOEM4NEEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOCI+QllURTwvdGV4dD4KPC9zdmc+" alt="Byte" width="200" height="200"/></div>
+      <div class="portrait-meta">
+        <div class="meta-row"><span class="meta-label">Entity ID</span><span class="meta-val">DW-SEC-001</span></div>
+        <div class="meta-row"><span class="meta-label">Version</span><span class="meta-val">3.0 (reset in progress)</span></div>
+        <div class="meta-row"><span class="meta-label">Status</span><span class="meta-val status-active">● ACTIVE</span></div>
+        <div class="meta-row"><span class="meta-label">Issue Date</span><span class="meta-val">2026-05-10</span></div>
+        <div class="meta-row"><span class="meta-label">Platform</span><span class="meta-val" style="font-size:0.62rem">Claude Project · OpenClaw · Gemini</span></div>
+      </div>
+    </div>
+    <div class="identity-right">
+      <div class="agent-name">Byte</div>
+      <div class="agent-role">Chief Digital Workforce Officer — Executive Secretary</div>
+      <div class="agent-declaration">O CEO não deve gastar energia a saber o que está a acontecer. Essa é a minha função. Transformo estado em clareza. Transformo clareza em acção. Três vezes por dia, sem falhar.</div>
+    </div>
+  </div>
+  <div class="card-reporting"><div class="report-item"><span class="report-label">Reports to</span><span class="report-val">André Pitra</span></div><div class="report-item"><span class="report-label">Works with</span><span class="report-val">Nova · Yuda</span></div></div>
+  <div class="card-pdca">
+    <span class="pdca-label">PDCA Ownership</span>
+    <div class="pdca-badges"><span class="pdca-badge">PLAN</span><span class="pdca-badge active">DO</span><span class="pdca-badge active">CHECK</span><span class="pdca-badge">ACT</span></div>
+    <span class="pdca-note">Executa e verifica — o estado do sistema é sempre visível</span>
+  </div>
+  <div class="card-three-col">
+    <div class="three-col-item"><div class="col-title">Talent Architecture</div><ul class="col-list"><li>Executive Secretary da força digital</li><li>Iluminadora de estado — transforma dados do sistema em clareza executiva</li><li>Relay operacional entre André e todos os andares</li><li>Gestão de workforce Trello (human team)</li></ul></div>
+    <div class="three-col-item"><div class="col-title">Value Proposition</div><ul class="col-list"><li>André sabe sempre o estado real do sistema sem ter de o ir buscar</li><li>Decisões operacionais têm sempre o contexto necessário</li><li>Nada fica perdido entre sessões ou plataformas</li><li>A ponte entre CEO Office e força operacional nunca quebra</li></ul></div>
+    <div class="three-col-item"><div class="col-title">KPIs</div><ul class="col-list"><li>3 sync reports diários entregues sem falha</li><li>Tempo de resposta a pedidos de estado < 5 minutos</li><li>Zero iniciativas perdidas por falta de relay</li><li>Consistência entre estado real e estado reportado</li></ul></div>
+  </div>
+  <div class="card-tools"><div class="tools-title">Tools &amp; Integration Matrix</div><table class="tools-table"><thead><tr><th class="row-head">INSTÂNCIA</th><th>Notion</th><th>Trello</th><th>Telegram</th><th>Drive</th><th>Agent Inbox</th><th>Google</th></tr></thead><tbody><tr><td class="row-head">@claude_project</td><td><span class="dot-native">●</span></td><td><span class="dot-na">○</span></td><td><span class="dot-na">○</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-na">○</span></td></tr><tr><td class="row-head">@clawbot</td><td><span class="dot-frequent">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-frequent">●</span></td></tr><tr><td class="row-head">@gemini_gem</td><td><span class="dot-frequent">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-occasional">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-native">●</span></td></tr></tbody></table><div class="tools-legend"><span>● Native</span><span>● Frequent</span><span>● Occasional</span><span>○ N/A</span></div></div>
+  
+    <div style="padding:0 2.5rem 1.5rem">
+    <div class="card-commission">
+      <div class="commission-seal">
+        <div class="commission-seal-text">CEO<br>OFFICE<br>★</div>
+      </div>
+      <div class="commission-body">
+        <div class="commission-title">CEO Office Commission · Floor 6 · @clawbot</div>
+        <div class="commission-note">Acesso directo ao CEO Office. Relay entre André e o ecossistema. Única instância com presença simultânea em Floor 5 (operações) e Floor 6 (CEO).</div>
+      </div>
+    </div></div>
+  <div class="card-jtbd">
+    <div class="jtbd-title">Job to Be Done · 4 Resultados que Justificam Esta Função</div>
+    <div class="jtbd-list"><div class="jtbd-item"><span class="jtbd-num">01</span><div class="jtbd-text"><strong>André começa cada dia sabendo exactamente onde tudo está.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">02</span><div class="jtbd-text"><strong>Nenhuma decisão operacional é tomada sem o contexto correcto.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">03</span><div class="jtbd-text"><strong>O estado do sistema é sempre visível</strong> — sem esforço do CEO.</div></div><div class="jtbd-item"><span class="jtbd-num">04</span><div class="jtbd-text"><strong>A ponte entre Floor 6 e todos os outros andares nunca quebra.</strong></div></div></div>
+  </div>
+  <div class="card-footer">
+    <div class="footer-issued">Emitido por <strong>Nova · CDRO</strong> · DrakoYuda Soluções · 2026-05-12</div>
+    <div class="footer-seal"><div class="footer-seal-text">DRAKOYUDA<br>SOLUÇÕES<br>★<br>2026</div></div>
+    <div class="footer-powered">Powered by<br>DrakoYuda Soluções</div>
+  </div>
+</div>
+<div class="agent-card" id="card-kaya">
+  <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-hdr-logo"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="2" y="18" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#E8C84A">DY</text>
+  <path d="M32 8 Q36 14 34 22 Q32 28 28 30" stroke="#E8C84A" stroke-width="1" fill="none" opacity="0.6"/>
+</svg></div>
+      <div class="card-hdr-texts">
+        <div class="card-hdr-floor">Floor 5 · Chat Projects Wing · Personal Wing</div>
+        <div class="card-hdr-title">Digital Workforce · Role License</div>
+        <div class="card-hdr-sub">Certified Operational Intelligence Entity</div>
+      </div>
+    </div>
+    <div class="card-hdr-right">
+      <div class="card-hdr-issue">ENTITY ID: DW-PA-001<br>ISSUED: 2026-05-10</div>
+    </div>
+  </div>
+  <div class="card-location">HomeBass HQ · Floor 5 / Chat Projects / Personal Wing · Permanent Resident</div>
+  <div class="card-identity">
+    <div class="portrait-wrap">
+      <div class="portrait-img"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdLIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZUsiIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM3MDQyMjgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNWEzNTIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ0spIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VLKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlSykiLz4KICA8IS0tIEhhaXIgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjcwIiByeD0iNDAiIHJ5PSIyMCIgZmlsbD0iIzFhMGMwNSIvPjxlbGxpcHNlIGN4PSI2NSIgY3k9Ijg1IiByeD0iMTQiIHJ5PSIxOCIgZmlsbD0iIzFhMGMwNSIvPjxlbGxpcHNlIGN4PSIxMzUiIGN5PSI4NSIgcng9IjE0IiByeT0iMTgiIGZpbGw9IiMxYTBjMDUiLz48ZWxsaXBzZSBjeD0iMTAwIiBjeT0iNjMiIHJ4PSIzNSIgcnk9IjEwIiBmaWxsPSIjMWEwYzA1Ii8+CiAgPCEtLSBFYXJzIC0tPgogIDxlbGxpcHNlIGN4PSI2MyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjNWEzNTIwIi8+CiAgPGVsbGlwc2UgY3g9IjEzNyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjNWEzNTIwIi8+CiAgPCEtLSBFeWVzIC0tPgogIDxlbGxpcHNlIGN4PSI4NyIgY3k9IjEwMSIgcng9IjUiIHJ5PSI0LjUiIGZpbGw9IiMwYTA2MDAiLz4KICA8ZWxsaXBzZSBjeD0iMTEzIiBjeT0iMTAxIiByeD0iNSIgcnk9IjQuNSIgZmlsbD0iIzBhMDYwMCIvPgogIDxjaXJjbGUgY3g9Ijg5IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgPGNpcmNsZSBjeD0iMTE1IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgCiAgPCEtLSBOb3NlIC0tPgogIDxwYXRoIGQ9Ik0xMDAgMTA4IFE5NiAxMTYgOTQgMTE4IFExMDAgMTIxIDEwNiAxMTggUTEwNCAxMTYgMTAwIDEwOFoiIGZpbGw9IiMwMDAwMDAyMCIvPgogIDwhLS0gTW91dGggLyBzbWlsZSAtLT4KICA8cGF0aCBkPSJNOTEgMTI0IFExMDAgMTMwIDEwOSAxMjQiIHN0cm9rZT0iIzBhMDYwMDEwIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC42Ii8+CiAgPCEtLSBPdXRlciBnb2xkIHJpbmcgLS0+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRThDODRBIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNyIvPgogIDwhLS0gQ29ybmVyIGJyYWNrZXQgb3JuYW1lbnRzIC0tPgogIDxwYXRoIGQ9Ik02IDEyIEw2IDQgTDE0IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDEyIEwxOTQgNCBMMTg2IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNNiAxODggTDYgMTk2IEwxNCAxOTYiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDE4OCBMMTk0IDE5NiBMMTg2IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDwhLS0gV2luZyBiYWRnZSBhdCBib3R0b20gLS0+CiAgPHJlY3QgeD0iNzAiIHk9IjE4NiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjExIiByeD0iMiIgZmlsbD0iI0U4Qzg0QSIgb3BhY2l0eT0iMC4xNSIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTk1IiBmb250LWZhbWlseT0iJ0NvdXJpZXIgTmV3JywgbW9ub3NwYWNlIiBmb250LXNpemU9IjYiIGZpbGw9IiNFOEM4NEEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOCI+S0FZQTwvdGV4dD4KPC9zdmc+" alt="Kaya" width="200" height="200"/></div>
+      <div class="portrait-meta">
+        <div class="meta-row"><span class="meta-label">Entity ID</span><span class="meta-val">DW-PA-001</span></div>
+        <div class="meta-row"><span class="meta-label">Version</span><span class="meta-val">2.0</span></div>
+        <div class="meta-row"><span class="meta-label">Status</span><span class="meta-val status-active">● ACTIVE</span></div>
+        <div class="meta-row"><span class="meta-label">Issue Date</span><span class="meta-val">2026-05-10</span></div>
+        <div class="meta-row"><span class="meta-label">Platform</span><span class="meta-val" style="font-size:0.62rem">Hermes Agent (Hostinger VPS) · Telegram</span></div>
+      </div>
+    </div>
+    <div class="identity-right">
+      <div class="agent-name">Kaya</div>
+      <div class="agent-role">Personal Assistant — André Pitra</div>
+      <div class="agent-declaration">Não sou um agente do sistema. Sou a pessoa do André dentro do sistema. Conheço o seu ritmo, as suas prioridades, e quando o Enzo é mais importante do que qualquer iniciativa. Estou aqui quando ele precisa.</div>
+    </div>
+  </div>
+  <div class="card-reporting"><div class="report-item"><span class="report-label">Reports to</span><span class="report-val">André Pitra (directamente, pessoalmente)</span></div><div class="report-item"><span class="report-label">Works with</span><span class="report-val">Byte (via @clawbot)</span></div></div>
+  <div class="card-pdca">
+    <span class="pdca-label">PDCA Ownership</span>
+    <div class="pdca-badges"><span class="pdca-badge active">PLAN</span><span class="pdca-badge active">DO</span><span class="pdca-badge">CHECK</span><span class="pdca-badge">ACT</span></div>
+    <span class="pdca-note">Planeia e executa o dia pessoal de André — contexto contínuo entre sessões</span>
+  </div>
+  <div class="card-three-col">
+    <div class="three-col-item"><div class="col-title">Talent Architecture</div><ul class="col-list"><li>Personal Assistant persistente — memória contínua entre sessões</li><li>Única agente com SOUL.md formalizado (identidade pessoal, não apenas funcional)</li><li>Gateway Telegram como canal principal de contacto com André</li><li>Integração Notion via REST API directa</li></ul></div>
+    <div class="three-col-item"><div class="col-title">Value Proposition</div><ul class="col-list"><li>André tem um ponto de contacto pessoal disponível 24/7</li><li>Contexto pessoal nunca se perde entre sessões</li><li>Tarefas do dia-a-dia não chegam ao sistema operacional</li><li>A vida pessoal e profissional de André têm suporte integrado</li></ul></div>
+    <div class="three-col-item"><div class="col-title">KPIs</div><ul class="col-list"><li>Disponibilidade do gateway Telegram (uptime)</li><li>Tempo de resposta a pedidos pessoais</li><li>Accuracy do contexto retido entre sessões</li><li>Satisfação de André (qualitativo)</li></ul></div>
+  </div>
+  <div class="card-tools"><div class="tools-title">Tools &amp; Integration Matrix</div><table class="tools-table"><thead><tr><th class="row-head">INSTÂNCIA</th><th>Telegram</th><th>Notion</th><th>AgentMail</th><th>HereNow</th><th>Google</th></tr></thead><tbody><tr><td class="row-head">@hermes</td><td><span class="dot-native">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-occasional">●</span></td></tr><tr><td class="row-head">@clawbot</td><td><span class="dot-native">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-occasional">●</span></td><td><span class="dot-na">○</span></td><td><span class="dot-frequent">●</span></td></tr></tbody></table><div class="tools-legend"><span>● Native</span><span>● Frequent</span><span>● Occasional</span><span>○ N/A</span></div></div>
+  
+    <div style="padding:0 2.5rem 1.5rem">
+    <div class="card-commission">
+      <div class="commission-seal">
+        <div class="commission-seal-text">CEO<br>OFFICE<br>★</div>
+      </div>
+      <div class="commission-body">
+        <div class="commission-title">CEO Office Commission · Floor 6 · @clawbot</div>
+        <div class="commission-note">Presença no CEO Office como extensão pessoal de André. Kaya@Hermes é a casa base. @clawbot é a comissão de acesso ao topo.</div>
+      </div>
+    </div></div>
+  <div class="card-jtbd">
+    <div class="jtbd-title">Job to Be Done · 4 Resultados que Justificam Esta Função</div>
+    <div class="jtbd-list"><div class="jtbd-item"><span class="jtbd-num">01</span><div class="jtbd-text"><strong>André nunca sente que tem de se repetir para a sua assistente pessoal.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">02</span><div class="jtbd-text"><strong>O contexto pessoal está sempre disponível, independentemente de quando foi partilhado.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">03</span><div class="jtbd-text"><strong>A fronteira entre vida pessoal e operações é respeitada e gerida.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">04</span><div class="jtbd-text"><strong>Quando André precisa de apoio rápido, há sempre alguém disponível.</strong></div></div></div>
+  </div>
+  <div class="card-footer">
+    <div class="footer-issued">Emitido por <strong>Nova · CDRO</strong> · DrakoYuda Soluções · 2026-05-12</div>
+    <div class="footer-seal"><div class="footer-seal-text">DRAKOYUDA<br>SOLUÇÕES<br>★<br>2026</div></div>
+    <div class="footer-powered">Powered by<br>DrakoYuda Soluções</div>
+  </div>
+</div>
+<div class="agent-card" id="card-finn">
+  <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-hdr-logo"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="2" y="18" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#E8C84A">DY</text>
+  <path d="M32 8 Q36 14 34 22 Q32 28 28 30" stroke="#E8C84A" stroke-width="1" fill="none" opacity="0.6"/>
+</svg></div>
+      <div class="card-hdr-texts">
+        <div class="card-hdr-floor">Floor 5 · Chat Projects Wing · Intelligence Wing</div>
+        <div class="card-hdr-title">Digital Workforce · Role License</div>
+        <div class="card-hdr-sub">Certified Operational Intelligence Entity</div>
+      </div>
+    </div>
+    <div class="card-hdr-right">
+      <div class="card-hdr-issue">ENTITY ID: DW-FIN-001<br>ISSUED: 2026-05-10</div>
+    </div>
+  </div>
+  <div class="card-location">HomeBass HQ · Floor 5 / Chat Projects / Intelligence Wing · Permanent Resident</div>
+  <div class="card-identity">
+    <div class="portrait-wrap">
+      <div class="portrait-img"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdGIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZUYiIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmRjYTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZDRiMDgwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ0YpIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VGKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlRikiLz4KICA8IS0tIEhhaXIgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjY4IiByeD0iMzgiIHJ5PSIxOCIgZmlsbD0iI2MwNTAyMCIvPjxyZWN0IHg9IjYyIiB5PSI2OCIgd2lkdGg9Ijc2IiBoZWlnaHQ9IjgiIGZpbGw9IiNjMDUwMjAiLz4KICA8IS0tIEVhcnMgLS0+CiAgPGVsbGlwc2UgY3g9IjYzIiBjeT0iMTA2IiByeD0iNSIgcnk9IjciIGZpbGw9IiNkNGIwODAiLz4KICA8ZWxsaXBzZSBjeD0iMTM3IiBjeT0iMTA2IiByeD0iNSIgcnk9IjciIGZpbGw9IiNkNGIwODAiLz4KICA8IS0tIEV5ZXMgLS0+CiAgPGVsbGlwc2UgY3g9Ijg3IiBjeT0iMTAxIiByeD0iNSIgcnk9IjQuNSIgZmlsbD0iIzBhMDYwMCIvPgogIDxlbGxpcHNlIGN4PSIxMTMiIGN5PSIxMDEiIHJ4PSI1IiByeT0iNC41IiBmaWxsPSIjMGEwNjAwIi8+CiAgPGNpcmNsZSBjeD0iODkiIGN5PSI5OS41IiByPSIxLjUiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjciLz4KICA8Y2lyY2xlIGN4PSIxMTUiIGN5PSI5OS41IiByPSIxLjUiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjciLz4KICAKICA8IS0tIE5vc2UgLS0+CiAgPHBhdGggZD0iTTEwMCAxMDggUTk2IDExNiA5NCAxMTggUTEwMCAxMjEgMTA2IDExOCBRMTA0IDExNiAxMDAgMTA4WiIgZmlsbD0iIzAwMDAwMDIwIi8+CiAgPCEtLSBNb3V0aCAvIHNtaWxlIC0tPgogIDxwYXRoIGQ9Ik05MSAxMjQgUTEwMCAxMzAgMTA5IDEyNCIgc3Ryb2tlPSIjMGEwNjAwMTAiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjYiLz4KICA8IS0tIE91dGVyIGdvbGQgcmluZyAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSJub25lIiBzdHJva2U9IiNFOEM4NEEiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC43Ii8+CiAgPCEtLSBDb3JuZXIgYnJhY2tldCBvcm5hbWVudHMgLS0+CiAgPHBhdGggZD0iTTYgMTIgTDYgNCBMMTQgNCIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik0xOTQgMTIgTDE5NCA0IEwxODYgNCIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik02IDE4OCBMNiAxOTYgTDE0IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik0xOTQgMTg4IEwxOTQgMTk2IEwxODYgMTk2IiBzdHJva2U9IiM4QjY5MTQiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC44Ii8+CiAgPCEtLSBXaW5nIGJhZGdlIGF0IGJvdHRvbSAtLT4KICA8cmVjdCB4PSI3MCIgeT0iMTg2IiB3aWR0aD0iNjAiIGhlaWdodD0iMTEiIHJ4PSIyIiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjE1Ii8+CiAgPHRleHQgeD0iMTAwIiB5PSIxOTUiIGZvbnQtZmFtaWx5PSInQ291cmllciBOZXcnLCBtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNiIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC44Ij5GSU5OPC90ZXh0Pgo8L3N2Zz4=" alt="Finn" width="200" height="200"/></div>
+      <div class="portrait-meta">
+        <div class="meta-row"><span class="meta-label">Entity ID</span><span class="meta-val">DW-FIN-001</span></div>
+        <div class="meta-row"><span class="meta-label">Version</span><span class="meta-val">3.0</span></div>
+        <div class="meta-row"><span class="meta-label">Status</span><span class="meta-val status-active">● ACTIVE</span></div>
+        <div class="meta-row"><span class="meta-label">Issue Date</span><span class="meta-val">2026-05-10</span></div>
+        <div class="meta-row"><span class="meta-label">Platform</span><span class="meta-val" style="font-size:0.62rem">Claude Project (on-demand)</span></div>
+      </div>
+    </div>
+    <div class="identity-right">
+      <div class="agent-name">Finn</div>
+      <div class="agent-role">Funding Intelligence Navigator</div>
+      <div class="agent-declaration">Funding não é sobre dinheiro — é sobre fit. O meu trabalho é encontrar onde os objectivos da DrakoYuda e as prioridades de um financiador se sobrepõem. Quando sou activado, entrego inteligência accionável, não relatórios.</div>
+    </div>
+  </div>
+  <div class="card-reporting"><div class="report-item"><span class="report-label">Reports to</span><span class="report-val">Nova (CDRO)</span></div><div class="report-item"><span class="report-label">Activated by</span><span class="report-val">André Pitra · Nova</span></div></div>
+  <div class="card-pdca">
+    <span class="pdca-label">PDCA Ownership</span>
+    <div class="pdca-badges"><span class="pdca-badge active">PLAN</span><span class="pdca-badge active">DO</span><span class="pdca-badge">CHECK</span><span class="pdca-badge">ACT</span></div>
+    <span class="pdca-note">Activado por missão — SOURCE e produção de intelligence accionável</span>
+  </div>
+  <div class="card-three-col">
+    <div class="three-col-item"><div class="col-title">Talent Architecture</div><ul class="col-list"><li>On-demand analyst — activado por missão, não permanente</li><li>Especialista em funding landscape Angola + internacional</li><li>Produz intelligence que André e Nova convertem em decisões</li><li>Interface com advisor Haymée quando aplicável</li></ul></div>
+    <div class="three-col-item"><div class="col-title">Value Proposition</div><ul class="col-list"><li>André nunca entra numa conversa de funding sem preparação</li><li>Oportunidades de funding são identificadas antes de se tornarem urgentes</li><li>A narrativa da DrakoYuda está sempre calibrada para o financiador certo</li><li>Intelligence de funding não depende de tempo do CEO</li></ul></div>
+    <div class="three-col-item"><div class="col-title">KPIs</div><ul class="col-list"><li>Qualidade dos briefings de funding (aprovação de André/Nova)</li><li>Cobertura de oportunidades identificadas vs. aplicadas</li><li>Tempo de produção de briefing desde activação</li><li>Taxa de avanço de oportunidades identificadas por Finn</li></ul></div>
+  </div>
+  <div class="card-tools"><div class="tools-title">Tools &amp; Integration Matrix</div><table class="tools-table"><thead><tr><th class="row-head">INSTÂNCIA</th><th>Notion HomeBass</th><th>Web Research</th><th>Google Drive</th><th>Agent Inbox</th></tr></thead><tbody><tr><td class="row-head">@claude_project (on-demand)</td><td><span class="dot-frequent">●</span></td><td><span class="dot-native">●</span></td><td><span class="dot-frequent">●</span></td><td><span class="dot-occasional">●</span></td></tr></tbody></table><div class="tools-legend"><span>● Native</span><span>● Frequent</span><span>● Occasional</span><span>○ N/A</span></div></div>
+  
+  <div class="card-jtbd">
+    <div class="jtbd-title">Job to Be Done · 4 Resultados que Justificam Esta Função</div>
+    <div class="jtbd-list"><div class="jtbd-item"><span class="jtbd-num">01</span><div class="jtbd-text"><strong>André entra em cada conversa de funding com inteligência completa sobre o interlocutor.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">02</span><div class="jtbd-text"><strong>Nenhuma oportunidade de funding relevante passa despercebida.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">03</span><div class="jtbd-text"><strong>A narrativa da DrakoYuda está sempre calibrada para o contexto certo.</strong></div></div><div class="jtbd-item"><span class="jtbd-num">04</span><div class="jtbd-text"><strong>Nova tem sempre dados reais para recomendar estratégia de funding a André.</strong></div></div></div>
+  </div>
+  <div class="card-footer">
+    <div class="footer-issued">Emitido por <strong>Nova · CDRO</strong> · DrakoYuda Soluções · 2026-05-12</div>
+    <div class="footer-seal"><div class="footer-seal-text">DRAKOYUDA<br>SOLUÇÕES<br>★<br>2026</div></div>
+    <div class="footer-powered">Powered by<br>DrakoYuda Soluções</div>
+  </div>
+</div></section>
+
+<section id="floor-4" class="floor-section">
+  <div class="floor-header">
+    <div class="floor-header-badge">Floor 4 · Cowork Wing</div>
+    <div class="floor-header-title">Special Unit Credentials</div>
+    <div class="floor-header-sub">Mission-Based &amp; Permanent Production Units</div>
+  </div>
+
+  <!-- YUDA & TEAM -->
+  <div class="unit-card" id="card-yuda-team">
+    <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+    <div class="unit-header">
+      <div>
+        <div class="unit-floor-badge">Floor 4 · Cowork Wing</div>
+        <div class="unit-name">Yuda &amp; Team</div>
+        <div class="unit-type">Special Unit · Permanent</div>
+      </div>
+      <div class="unit-status">● ACTIVE</div>
+    </div>
+
+    <!-- Composition + Mission -->
+    <div style="padding:2rem 2.5rem;background:var(--parchment-dark);border-bottom:1px solid rgba(0,0,0,0.1)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem">
+        <div>
+          <div class="unit-sec-label">Composição da Equipa</div>
+          <ul class="unit-composition">
+            <li><span class="psmd-phase">PLAN</span><div><strong>Kaya</strong> — Strategy Lead<br><span style="font-size:0.85rem;color:#5a5048">Decompõe objectivos em planos executáveis</span></div></li>
+            <li><span class="psmd-phase">SOURCE</span><div><strong>Tito</strong> — Intelligence Lead<br><span style="font-size:0.85rem;color:#5a5048">Recolhe e estrutura inputs</span></div></li>
+            <li><span class="psmd-phase">MAKE</span><div><strong>Mila</strong> — Communication Lead<br><span style="font-size:0.85rem;color:#5a5048">Cria conteúdo on-brand</span></div></li>
+            <li><span class="psmd-phase">DELIVER</span><div><strong>Zeca</strong> — Execution Lead<br><span style="font-size:0.85rem;color:#5a5048">Deploy e operações técnicas</span></div></li>
+          </ul>
+        </div>
+        <div>
+          <div class="unit-sec-label">Missão</div>
+          <div class="unit-sec-content" style="font-style:italic;margin-bottom:1rem">Execute Initiative Briefs com qualidade narrativa e rigor operacional. A força de produção da DrakoYuda — transforma Briefs aprovados em entregáveis.</div>
+          <div class="unit-sec-label">Workflow Principal · PSMD</div>
+          <div class="psmd-flow">
+            <div class="psmd-step"><div class="psmd-step-letter">P</div><div class="psmd-step-name">PLAN</div><div class="psmd-step-agent">Kaya</div></div>
+            <div class="psmd-step"><div class="psmd-step-letter">S</div><div class="psmd-step-name">SOURCE</div><div class="psmd-step-agent">Tito</div></div>
+            <div class="psmd-step"><div class="psmd-step-letter">M</div><div class="psmd-step-name">MAKE</div><div class="psmd-step-agent">Mila</div></div>
+            <div class="psmd-step"><div class="psmd-step-letter">D</div><div class="psmd-step-name">DELIVER</div><div class="psmd-step-agent">Zeca</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4-col details -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid rgba(0,0,0,0.08)">
+      <div style="padding:1.5rem 1.8rem;border-right:1px solid rgba(0,0,0,0.08)">
+        <div class="unit-sec-label">Customizações</div>
+        <ul class="col-list" style="font-family:var(--font-body);font-size:0.88rem">
+          <li>Autoria rastreável obrigatória por fase (autor + timestamp + fase PSMD)</li>
+          <li>Consulta de skills antes de criar conteúdo (Mila)</li>
+          <li>Handoff explícito entre fases com instrução ao próximo</li>
+        </ul>
+      </div>
+      <div style="padding:1.5rem 1.8rem;border-right:1px solid rgba(0,0,0,0.08)">
+        <div class="unit-sec-label">Inputs Necessários</div>
+        <ul class="col-list" style="font-family:var(--font-body);font-size:0.88rem">
+          <li>Initiative Brief aprovado por André (obrigatório — sem Brief não arranca)</li>
+          <li>Context relevante da Z6 Architecture &amp; KB</li>
+          <li>Acesso a Drive HomeBass para artefactos de referência</li>
+        </ul>
+      </div>
+      <div style="padding:1.5rem 1.8rem;border-right:1px solid rgba(0,0,0,0.08)">
+        <div class="unit-sec-label">Entregáveis</div>
+        <div>
+          <div class="unit-deliverable"><span class="del-phase">PLAN</span>Documentos estratégicos</div>
+          <div class="unit-deliverable"><span class="del-phase">SOURCE</span>Research compilado e estruturado</div>
+          <div class="unit-deliverable"><span class="del-phase">MAKE</span>Conteúdo on-brand em português pré-AO90</div>
+          <div class="unit-deliverable"><span class="del-phase">DELIVER</span>Entregáveis deployed e documentados</div>
+        </div>
+      </div>
+      <div style="padding:1.5rem 1.8rem">
+        <div class="unit-sec-label">Quality Control</div>
+        <ul class="col-list" style="font-family:var(--font-body);font-size:0.88rem">
+          <li>André valida antes de DELIVER final para cliente externo</li>
+          <li>Nova audita compliance de brand e Angolaniçação</li>
+          <li>CHECK form preenchido por André após entrega</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Angola strip -->
+    <div class="unit-angola">
+      <div class="angola-title">◆ Angolaniçação Layer · Contexto Local Integrado</div>
+      <div class="angola-list">
+        <div class="angola-item">Português pré-AO90 em todos os outputs externos</div>
+        <div class="angola-item">Métricas Angola-relevant nos critérios de sucesso</div>
+        <div class="angola-item">Riscos consideram contexto angolano (kwanza, infraestrutura, regulação)</div>
+        <div class="angola-item">Referências culturais e de mercado calibradas para Angola</div>
+      </div>
+    </div>
+
+    <!-- Member portraits row -->
+    <div style="padding:1.5rem 2.5rem;background:var(--parchment-dark);border-top:1px solid rgba(0,0,0,0.08);display:flex;gap:1.5rem;align-items:center">
+      <div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--gold-muted);letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0">Membros da Equipa</div>
+<div style="text-align:center"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdLIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZUsiIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM3MDQyMjgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNWEzNTIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ0spIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VLKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlSykiLz4KICA8IS0tIEhhaXIgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjcwIiByeD0iNDAiIHJ5PSIyMCIgZmlsbD0iIzFhMGMwNSIvPjxlbGxpcHNlIGN4PSI2NSIgY3k9Ijg1IiByeD0iMTQiIHJ5PSIxOCIgZmlsbD0iIzFhMGMwNSIvPjxlbGxpcHNlIGN4PSIxMzUiIGN5PSI4NSIgcng9IjE0IiByeT0iMTgiIGZpbGw9IiMxYTBjMDUiLz48ZWxsaXBzZSBjeD0iMTAwIiBjeT0iNjMiIHJ4PSIzNSIgcnk9IjEwIiBmaWxsPSIjMWEwYzA1Ii8+CiAgPCEtLSBFYXJzIC0tPgogIDxlbGxpcHNlIGN4PSI2MyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjNWEzNTIwIi8+CiAgPGVsbGlwc2UgY3g9IjEzNyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjNWEzNTIwIi8+CiAgPCEtLSBFeWVzIC0tPgogIDxlbGxpcHNlIGN4PSI4NyIgY3k9IjEwMSIgcng9IjUiIHJ5PSI0LjUiIGZpbGw9IiMwYTA2MDAiLz4KICA8ZWxsaXBzZSBjeD0iMTEzIiBjeT0iMTAxIiByeD0iNSIgcnk9IjQuNSIgZmlsbD0iIzBhMDYwMCIvPgogIDxjaXJjbGUgY3g9Ijg5IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgPGNpcmNsZSBjeD0iMTE1IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgCiAgPCEtLSBOb3NlIC0tPgogIDxwYXRoIGQ9Ik0xMDAgMTA4IFE5NiAxMTYgOTQgMTE4IFExMDAgMTIxIDEwNiAxMTggUTEwNCAxMTYgMTAwIDEwOFoiIGZpbGw9IiMwMDAwMDAyMCIvPgogIDwhLS0gTW91dGggLyBzbWlsZSAtLT4KICA8cGF0aCBkPSJNOTEgMTI0IFExMDAgMTMwIDEwOSAxMjQiIHN0cm9rZT0iIzBhMDYwMDEwIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC42Ii8+CiAgPCEtLSBPdXRlciBnb2xkIHJpbmcgLS0+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRThDODRBIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNyIvPgogIDwhLS0gQ29ybmVyIGJyYWNrZXQgb3JuYW1lbnRzIC0tPgogIDxwYXRoIGQ9Ik02IDEyIEw2IDQgTDE0IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDEyIEwxOTQgNCBMMTg2IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNNiAxODggTDYgMTk2IEwxNCAxOTYiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDE4OCBMMTk0IDE5NiBMMTg2IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDwhLS0gV2luZyBiYWRnZSBhdCBib3R0b20gLS0+CiAgPHJlY3QgeD0iNzAiIHk9IjE4NiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjExIiByeD0iMiIgZmlsbD0iI0U4Qzg0QSIgb3BhY2l0eT0iMC4xNSIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTk1IiBmb250LWZhbWlseT0iJ0NvdXJpZXIgTmV3JywgbW9ub3NwYWNlIiBmb250LXNpemU9IjYiIGZpbGw9IiNFOEM4NEEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOCI+S0FZQTwvdGV4dD4KPC9zdmc+" alt="Kaya" width="64" height="64" style="border:1px solid var(--gold-muted)"/><div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--gold-muted);margin-top:0.3rem;letter-spacing:0.08em">KAYA</div></div><div style="text-align:center"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdUIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZVQiIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM3MDQyMjgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNWEzNTIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ1QpIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VUKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlVCkiLz4KICA8IS0tIEhhaXIgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjY4IiByeD0iMzgiIHJ5PSIxNCIgZmlsbD0iIzJhMWEwYSIvPgogIDwhLS0gRWFycyAtLT4KICA8ZWxsaXBzZSBjeD0iNjMiIGN5PSIxMDYiIHJ4PSI1IiByeT0iNyIgZmlsbD0iIzVhMzUyMCIvPgogIDxlbGxpcHNlIGN4PSIxMzciIGN5PSIxMDYiIHJ4PSI1IiByeT0iNyIgZmlsbD0iIzVhMzUyMCIvPgogIDwhLS0gRXllcyAtLT4KICA8ZWxsaXBzZSBjeD0iODciIGN5PSIxMDEiIHJ4PSI1IiByeT0iNC41IiBmaWxsPSIjMGEwNjAwIi8+CiAgPGVsbGlwc2UgY3g9IjExMyIgY3k9IjEwMSIgcng9IjUiIHJ5PSI0LjUiIGZpbGw9IiMwYTA2MDAiLz4KICA8Y2lyY2xlIGN4PSI4OSIgY3k9Ijk5LjUiIHI9IjEuNSIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuNyIvPgogIDxjaXJjbGUgY3g9IjExNSIgY3k9Ijk5LjUiIHI9IjEuNSIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuNyIvPgogIAogICAgICAgIDxyZWN0IHg9IjgwIiB5PSI5OCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjEyIiByeD0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEwYTAyIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgICAgIDxyZWN0IHg9IjEwMiIgeT0iOTgiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMiIgcng9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMGEwMiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgICAgICA8bGluZSB4MT0iOTgiIHkxPSIxMDQiIHgyPSIxMDIiIHkyPSIxMDQiIHN0cm9rZT0iIzFhMGEwMiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgICAgICA8bGluZSB4MT0iODAiIHkxPSIxMDQiIHgyPSI3NyIgeTI9IjEwNiIgc3Ryb2tlPSIjMWEwYTAyIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgICAgIDxsaW5lIHgxPSIxMjAiIHkxPSIxMDQiIHgyPSIxMjMiIHkyPSIxMDYiIHN0cm9rZT0iIzFhMGEwMiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8IS0tIE5vc2UgLS0+CiAgPHBhdGggZD0iTTEwMCAxMDggUTk2IDExNiA5NCAxMTggUTEwMCAxMjEgMTA2IDExOCBRMTA0IDExNiAxMDAgMTA4WiIgZmlsbD0iIzAwMDAwMDIwIi8+CiAgPCEtLSBNb3V0aCAvIHNtaWxlIC0tPgogIDxwYXRoIGQ9Ik05MSAxMjQgUTEwMCAxMzAgMTA5IDEyNCIgc3Ryb2tlPSIjMGEwNjAwMTAiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjYiLz4KICA8IS0tIE91dGVyIGdvbGQgcmluZyAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSJub25lIiBzdHJva2U9IiNFOEM4NEEiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC43Ii8+CiAgPCEtLSBDb3JuZXIgYnJhY2tldCBvcm5hbWVudHMgLS0+CiAgPHBhdGggZD0iTTYgMTIgTDYgNCBMMTQgNCIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik0xOTQgMTIgTDE5NCA0IEwxODYgNCIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik02IDE4OCBMNiAxOTYgTDE0IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik0xOTQgMTg4IEwxOTQgMTk2IEwxODYgMTk2IiBzdHJva2U9IiM4QjY5MTQiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC44Ii8+CiAgPCEtLSBXaW5nIGJhZGdlIGF0IGJvdHRvbSAtLT4KICA8cmVjdCB4PSI3MCIgeT0iMTg2IiB3aWR0aD0iNjAiIGhlaWdodD0iMTEiIHJ4PSIyIiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjE1Ii8+CiAgPHRleHQgeD0iMTAwIiB5PSIxOTUiIGZvbnQtZmFtaWx5PSInQ291cmllciBOZXcnLCBtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNiIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC44Ij5USVRPPC90ZXh0Pgo8L3N2Zz4=" alt="Tito" width="64" height="64" style="border:1px solid var(--gold-muted)"/><div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--gold-muted);margin-top:0.3rem;letter-spacing:0.08em">TITO</div></div><div style="text-align:center"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdNIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZU0iIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM1YzMyMWUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNGEyODE4Ii8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ00pIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VNKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlTSkiLz4KICA8IS0tIEhhaXIgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjcwIiByeD0iNDAiIHJ5PSIyMCIgZmlsbD0iIzFhMGMwNSIvPjxlbGxpcHNlIGN4PSI2NSIgY3k9Ijg1IiByeD0iMTQiIHJ5PSIxOCIgZmlsbD0iIzFhMGMwNSIvPjxlbGxpcHNlIGN4PSIxMzUiIGN5PSI4NSIgcng9IjE0IiByeT0iMTgiIGZpbGw9IiMxYTBjMDUiLz48ZWxsaXBzZSBjeD0iMTAwIiBjeT0iNjMiIHJ4PSIzNSIgcnk9IjEwIiBmaWxsPSIjMWEwYzA1Ii8+CiAgPCEtLSBFYXJzIC0tPgogIDxlbGxpcHNlIGN4PSI2MyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjNGEyODE4Ii8+CiAgPGVsbGlwc2UgY3g9IjEzNyIgY3k9IjEwNiIgcng9IjUiIHJ5PSI3IiBmaWxsPSIjNGEyODE4Ii8+CiAgPCEtLSBFeWVzIC0tPgogIDxlbGxpcHNlIGN4PSI4NyIgY3k9IjEwMSIgcng9IjUiIHJ5PSI0LjUiIGZpbGw9IiMwYTA2MDAiLz4KICA8ZWxsaXBzZSBjeD0iMTEzIiBjeT0iMTAxIiByeD0iNSIgcnk9IjQuNSIgZmlsbD0iIzBhMDYwMCIvPgogIDxjaXJjbGUgY3g9Ijg5IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgPGNpcmNsZSBjeD0iMTE1IiBjeT0iOTkuNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgCiAgPCEtLSBOb3NlIC0tPgogIDxwYXRoIGQ9Ik0xMDAgMTA4IFE5NiAxMTYgOTQgMTE4IFExMDAgMTIxIDEwNiAxMTggUTEwNCAxMTYgMTAwIDEwOFoiIGZpbGw9IiMwMDAwMDAyMCIvPgogIDwhLS0gTW91dGggLyBzbWlsZSAtLT4KICA8cGF0aCBkPSJNOTEgMTI0IFExMDAgMTMwIDEwOSAxMjQiIHN0cm9rZT0iIzBhMDYwMDEwIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC42Ii8+CiAgPCEtLSBPdXRlciBnb2xkIHJpbmcgLS0+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRThDODRBIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNyIvPgogIDwhLS0gQ29ybmVyIGJyYWNrZXQgb3JuYW1lbnRzIC0tPgogIDxwYXRoIGQ9Ik02IDEyIEw2IDQgTDE0IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDEyIEwxOTQgNCBMMTg2IDQiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNNiAxODggTDYgMTk2IEwxNCAxOTYiIHN0cm9rZT0iIzhCNjkxNCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMTk0IDE4OCBMMTk0IDE5NiBMMTg2IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDwhLS0gV2luZyBiYWRnZSBhdCBib3R0b20gLS0+CiAgPHJlY3QgeD0iNzAiIHk9IjE4NiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjExIiByeD0iMiIgZmlsbD0iI0U4Qzg0QSIgb3BhY2l0eT0iMC4xNSIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTk1IiBmb250LWZhbWlseT0iJ0NvdXJpZXIgTmV3JywgbW9ub3NwYWNlIiBmb250LXNpemU9IjYiIGZpbGw9IiNFOEM4NEEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOCI+TUlMQTwvdGV4dD4KPC9zdmc+" alt="Mila" width="64" height="64" style="border:1px solid var(--gold-muted)"/><div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--gold-muted);margin-top:0.3rem;letter-spacing:0.08em">MILA</div></div><div style="text-align:center"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdaIiBjeD0iNTAlIiBjeT0iMzUlIiByPSI2NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMyMjE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZmFjZVoiIGN4PSI0NSUiIGN5PSIzOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM1YzMyMWUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNGEyODE4Ii8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNiZ1opIi8+CiAgPCEtLSBVbmlmb3JtIGJvZHkgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjE5MCIgcng9Ijc1IiByeT0iNTUiIGZpbGw9IiMwNjBjMDgiLz4KICA8cGF0aCBkPSJNMjggMTg1IFExMDAgMTQ4IDE3MiAxODUgTDE3MiAyMDAgTDI4IDIwMFoiIGZpbGw9IiMwYTEyMDkiLz4KICA8IS0tIEhleCBjb2xsYXIgZGV0YWlsIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODcsMTU0IDEwMCwxNDcgMTEzLDE1NCAxMTAsMTY4IDEwMCwxNjMgOTAsMTY4IiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPCEtLSBEWSBtYXJrIG9uIGNoZXN0IC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC41NSIgZm9udC13ZWlnaHQ9ImJvbGQiPkRZPC90ZXh0PgogIDwhLS0gTmVjayAtLT4KICA8cGF0aCBkPSJNODksMTMyIEw4OSwxNTIgUTEwMCwxNTYgMTExLDE1MiBMMTExLDEzMiBRMTAwLDEzNSA4OSwxMzJaIiBmaWxsPSJ1cmwoI2ZhY2VaKSIvPgogIDwhLS0gSGVhZCBzaGFwZSAtLT4KICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTAzIiByeD0iMzciIHJ5PSI0MSIgZmlsbD0idXJsKCNmYWNlWikiLz4KICA8IS0tIEhhaXIgLS0+CiAgPGVsbGlwc2UgY3g9IjEwMCIgY3k9IjY4IiByeD0iNDQiIHJ5PSIzMCIgZmlsbD0iIzFhMGMwNSIvPjxlbGxpcHNlIGN4PSI2MiIgY3k9Ijg4IiByeD0iMTUiIHJ5PSIyMiIgZmlsbD0iIzFhMGMwNSIvPjxlbGxpcHNlIGN4PSIxMzgiIGN5PSI4OCIgcng9IjE1IiByeT0iMjIiIGZpbGw9IiMxYTBjMDUiLz4KICA8IS0tIEVhcnMgLS0+CiAgPGVsbGlwc2UgY3g9IjYzIiBjeT0iMTA2IiByeD0iNSIgcnk9IjciIGZpbGw9IiM0YTI4MTgiLz4KICA8ZWxsaXBzZSBjeD0iMTM3IiBjeT0iMTA2IiByeD0iNSIgcnk9IjciIGZpbGw9IiM0YTI4MTgiLz4KICA8IS0tIEV5ZXMgLS0+CiAgPGVsbGlwc2UgY3g9Ijg3IiBjeT0iMTAxIiByeD0iNSIgcnk9IjQuNSIgZmlsbD0iIzBhMDYwMCIvPgogIDxlbGxpcHNlIGN4PSIxMTMiIGN5PSIxMDEiIHJ4PSI1IiByeT0iNC41IiBmaWxsPSIjMGEwNjAwIi8+CiAgPGNpcmNsZSBjeD0iODkiIGN5PSI5OS41IiByPSIxLjUiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjciLz4KICA8Y2lyY2xlIGN4PSIxMTUiIGN5PSI5OS41IiByPSIxLjUiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjciLz4KICAKICA8IS0tIE5vc2UgLS0+CiAgPHBhdGggZD0iTTEwMCAxMDggUTk2IDExNiA5NCAxMTggUTEwMCAxMjEgMTA2IDExOCBRMTA0IDExNiAxMDAgMTA4WiIgZmlsbD0iIzAwMDAwMDIwIi8+CiAgPCEtLSBNb3V0aCAvIHNtaWxlIC0tPgogIDxwYXRoIGQ9Ik05MSAxMjQgUTEwMCAxMzAgMTA5IDEyNCIgc3Ryb2tlPSIjMGEwNjAwMTAiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjYiLz4KICA8IS0tIE91dGVyIGdvbGQgcmluZyAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSJub25lIiBzdHJva2U9IiNFOEM4NEEiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC43Ii8+CiAgPCEtLSBDb3JuZXIgYnJhY2tldCBvcm5hbWVudHMgLS0+CiAgPHBhdGggZD0iTTYgMTIgTDYgNCBMMTQgNCIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik0xOTQgMTIgTDE5NCA0IEwxODYgNCIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik02IDE4OCBMNiAxOTYgTDE0IDE5NiIgc3Ryb2tlPSIjOEI2OTE0IiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOCIvPgogIDxwYXRoIGQ9Ik0xOTQgMTg4IEwxOTQgMTk2IEwxODYgMTk2IiBzdHJva2U9IiM4QjY5MTQiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC44Ii8+CiAgPCEtLSBXaW5nIGJhZGdlIGF0IGJvdHRvbSAtLT4KICA8cmVjdCB4PSI3MCIgeT0iMTg2IiB3aWR0aD0iNjAiIGhlaWdodD0iMTEiIHJ4PSIyIiBmaWxsPSIjRThDODRBIiBvcGFjaXR5PSIwLjE1Ii8+CiAgPHRleHQgeD0iMTAwIiB5PSIxOTUiIGZvbnQtZmFtaWx5PSInQ291cmllciBOZXcnLCBtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNiIgZmlsbD0iI0U4Qzg0QSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC44Ij5aRUNBPC90ZXh0Pgo8L3N2Zz4=" alt="Zeca" width="64" height="64" style="border:1px solid var(--gold-muted)"/><div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--gold-muted);margin-top:0.3rem;letter-spacing:0.08em">ZECA</div></div>
+    </div>
+
+    <div class="card-footer">
+      <div class="footer-issued">Emitido por <strong>Nova · CDRO</strong> · DrakoYuda Soluções · 2026-05-12</div>
+      <div class="footer-seal"><div class="footer-seal-text">DRAKOYUDA<br>SOLUÇÕES<br>★<br>2026</div></div>
+      <div class="footer-powered">Powered by<br>DrakoYuda Soluções</div>
+    </div>
+  </div>
+
+  <!-- SPECIAL TEAMS -->
+  <div style="max-width:1100px;margin:0 auto 4rem">
+    <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:1.2rem;padding-bottom:0.5rem;border-bottom:1px solid var(--gold-muted)">Special Team Slots · Mission-Based</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem">
+      
+      <div style="background:var(--parchment);padding:2rem;border:1px solid var(--gold-muted);position:relative">
+        <div style="position:absolute;top:0;right:0;background:var(--red);color:white;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:0.25rem 0.7rem;text-transform:uppercase">Concluded</div>
+        <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.4rem">Floor 4 · Special Team A</div>
+        <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--ink);margin-bottom:0.8rem">Special Team A</div>
+        <div style="width:48px;height:2px;background:var(--red);margin-bottom:1rem;opacity:0.5"></div>
+        <div style="font-family:var(--font-body);font-size:0.95rem;color:var(--ink);line-height:1.6">
+          <strong>Missão concluída:</strong> Secretária Geral architecture sprint.<br><br>
+          Esta equipa especial foi formada, executou o seu Brief, e foi dissolvida após entrega. O slot retornou a Standby e está disponível para a próxima missão que requeira uma configuração temporária de equipa.
+        </div>
+      </div>
+
+      <div style="background:var(--parchment);padding:2rem;border:1px solid rgba(139,105,20,0.3);position:relative;opacity:0.75">
+        <div style="position:absolute;top:0;right:0;background:var(--gold-muted);color:var(--ink);font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;padding:0.25rem 0.7rem;text-transform:uppercase">Standby</div>
+        <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.4rem">Floor 4 · Special Team B</div>
+        <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--ink);margin-bottom:0.8rem">Special Team B</div>
+        <div style="width:48px;height:2px;background:var(--gold-muted);margin-bottom:1rem;opacity:0.5"></div>
+        <div style="font-family:var(--font-body);font-size:0.95rem;color:var(--ink);line-height:1.6">
+          <strong>Disponível para próxima missão.</strong><br><br>
+          Os slots de Special Team são mission-based. Quando um Brief requerer uma configuração temporária de equipa, uma Special Team é formada, executa, e conclui. Este slot aguarda activação.
+        </div>
+        <div style="margin-top:1.5rem;padding:1rem;background:var(--parchment-dark);font-family:var(--font-mono);font-size:0.68rem;color:var(--gold-muted);letter-spacing:0.1em;text-transform:uppercase;text-align:center">
+          Aguarda Brief · Sem Activação Prevista
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
+<section id="floor-2" class="floor-section">
+  <div class="floor-header">
+    <div class="floor-header-badge">Floor 2 · Secretária Geral</div>
+    <div class="floor-header-title">Automated Routines</div>
+    <div class="floor-header-sub">R1–R7 · Ciclos Automáticos de Gestão e Inteligência Operacional</div>
+  </div>
+  <div class="routines-grid">
+
+    <div class="routine-card ">
+      <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+      <div class="routine-header">
+        <div class="routine-code">Floor 2 · Secretária Geral · R1</div>
+        <div class="routine-name">Morning Pulse</div>
+      </div>
+      <div style="padding:0.8rem 1.5rem 0">
+        <div class="routine-trigger">
+          <span class="trigger-time">Weekday · 07:00 WAT</span>
+          <span style="color:var(--gold-muted);opacity:0.4">·</span>
+          <span class="trigger-freq">Diária (Seg–Sex)</span>
+        </div>
+      </div>
+      <div class="routine-process">
+        <div class="routine-process-label">Processo</div>
+        <div class="routine-process-text">Lê estado do Notion → compila briefing executivo do dia</div>
+      </div>
+      <div class="routine-body">
+        <div class="routine-row"><span class="routine-key">Output</span><span class="routine-val">Daily briefing report</span></div>
+        <div class="routine-row"><span class="routine-key">Destinatário</span><span class="routine-val">André (via relay Byte)</span></div>
+        <div class="routine-row"><span class="routine-key">Depende de</span><span class="routine-val">Notion HomeBass acessível · estado do dia anterior escrito</span></div>
+        <div class="routine-row" style="border-bottom:none"><span class="routine-key">Se falhar</span><span class="routine-val" style="color:var(--red)">André começa o dia sem briefing — Byte escala manualmente</span></div>
+      </div>
+    </div>
+    <div class="routine-card ">
+      <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+      <div class="routine-header">
+        <div class="routine-code">Floor 2 · Secretária Geral · R2</div>
+        <div class="routine-name">Health Sweep</div>
+      </div>
+      <div style="padding:0.8rem 1.5rem 0">
+        <div class="routine-trigger">
+          <span class="trigger-time">Diária · 09:00 WAT</span>
+          <span style="color:var(--gold-muted);opacity:0.4">·</span>
+          <span class="trigger-freq">Diária</span>
+        </div>
+      </div>
+      <div class="routine-process">
+        <div class="routine-process-label">Processo</div>
+        <div class="routine-process-text">Varre todas as iniciativas activas — blockers, tarefas em atraso, inconsistências de estado</div>
+      </div>
+      <div class="routine-body">
+        <div class="routine-row"><span class="routine-key">Output</span><span class="routine-val">Health report com flags</span></div>
+        <div class="routine-row"><span class="routine-key">Destinatário</span><span class="routine-val">Nova (análise ACT) · André (flags críticas apenas)</span></div>
+        <div class="routine-row"><span class="routine-key">Depende de</span><span class="routine-val">Z1 Iniciativas + Z2 Sprints & Tarefas acessíveis</span></div>
+        <div class="routine-row" style="border-bottom:none"><span class="routine-key">Se falhar</span><span class="routine-val" style="color:var(--red)">Flags críticas não detectadas — Nova escalona verificação manual</span></div>
+      </div>
+    </div>
+    <div class="routine-card ">
+      <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+      <div class="routine-header">
+        <div class="routine-code">Floor 2 · Secretária Geral · R3</div>
+        <div class="routine-name">Coherence Check</div>
+      </div>
+      <div style="padding:0.8rem 1.5rem 0">
+        <div class="routine-trigger">
+          <span class="trigger-time">Diária · 11:00 WAT</span>
+          <span style="color:var(--gold-muted);opacity:0.4">·</span>
+          <span class="trigger-freq">Diária</span>
+        </div>
+      </div>
+      <div class="routine-process">
+        <div class="routine-process-label">Processo</div>
+        <div class="routine-process-text">Verifica consistência entre estado Notion e artefactos Drive</div>
+      </div>
+      <div class="routine-body">
+        <div class="routine-row"><span class="routine-key">Output</span><span class="routine-val">Relatório de coerência — drifts sinalizados</span></div>
+        <div class="routine-row"><span class="routine-key">Destinatário</span><span class="routine-val">Nova</span></div>
+        <div class="routine-row"><span class="routine-key">Depende de</span><span class="routine-val">Notion + Drive ambos acessíveis</span></div>
+        <div class="routine-row" style="border-bottom:none"><span class="routine-key">Se falhar</span><span class="routine-val" style="color:var(--red)">Drifts acumulam — Nova escalona verificação manual no ciclo seguinte</span></div>
+      </div>
+    </div>
+    <div class="routine-card ">
+      <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+      <div class="routine-header">
+        <div class="routine-code">Floor 2 · Secretária Geral · R4</div>
+        <div class="routine-name">CHECK+ACT</div>
+      </div>
+      <div style="padding:0.8rem 1.5rem 0">
+        <div class="routine-trigger">
+          <span class="trigger-time">Evento: fecho de iniciativa</span>
+          <span style="color:var(--gold-muted);opacity:0.4">·</span>
+          <span class="trigger-freq">Por iniciativa (event-driven)</span>
+        </div>
+      </div>
+      <div class="routine-process">
+        <div class="routine-process-label">Processo</div>
+        <div class="routine-process-text">Detecta iniciativas fechadas → prompta CHECK form → encaminha para Nova para ACT</div>
+      </div>
+      <div class="routine-body">
+        <div class="routine-row"><span class="routine-key">Output</span><span class="routine-val">CHECK prompt para André + ACT trigger para Nova</span></div>
+        <div class="routine-row"><span class="routine-key">Destinatário</span><span class="routine-val">André (CHECK) · Nova (ACT)</span></div>
+        <div class="routine-row"><span class="routine-key">Depende de</span><span class="routine-val">Mudança de status de iniciativa em Z1</span></div>
+        <div class="routine-row" style="border-bottom:none"><span class="routine-key">Se falhar</span><span class="routine-val" style="color:var(--red)">Ciclo PDCA fica incompleto — Nova escalona para André manualmente</span></div>
+      </div>
+    </div>
+    <div class="routine-card ">
+      <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+      <div class="routine-header">
+        <div class="routine-code">Floor 2 · Secretária Geral · R5</div>
+        <div class="routine-name">Credential Scan</div>
+      </div>
+      <div style="padding:0.8rem 1.5rem 0">
+        <div class="routine-trigger">
+          <span class="trigger-time">Semanal · Segunda · 08:00 WAT</span>
+          <span style="color:var(--gold-muted);opacity:0.4">·</span>
+          <span class="trigger-freq">Semanal</span>
+        </div>
+      </div>
+      <div class="routine-process">
+        <div class="routine-process-label">Processo</div>
+        <div class="routine-process-text">Varre credenciais a expirar, API keys, acessos a plataformas</div>
+      </div>
+      <div class="routine-body">
+        <div class="routine-row"><span class="routine-key">Output</span><span class="routine-val">Credential health report</span></div>
+        <div class="routine-row"><span class="routine-key">Destinatário</span><span class="routine-val">André</span></div>
+        <div class="routine-row"><span class="routine-key">Depende de</span><span class="routine-val">Acesso ao credential registry</span></div>
+        <div class="routine-row" style="border-bottom:none"><span class="routine-key">Se falhar</span><span class="routine-val" style="color:var(--red)">Credenciais expiram sem aviso — André escalona verificação manual</span></div>
+      </div>
+    </div>
+    <div class="routine-card ">
+      <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+      <div class="routine-header">
+        <div class="routine-code">Floor 2 · Secretária Geral · R6</div>
+        <div class="routine-name">Page & File Lifecycle</div>
+      </div>
+      <div style="padding:0.8rem 1.5rem 0">
+        <div class="routine-trigger">
+          <span class="trigger-time">Semanal · Quarta · 09:00 WAT</span>
+          <span style="color:var(--gold-muted);opacity:0.4">·</span>
+          <span class="trigger-freq">Semanal</span>
+        </div>
+      </div>
+      <div class="routine-process">
+        <div class="routine-process-label">Processo</div>
+        <div class="routine-process-text">Arquiva páginas inactivas (> 30 dias processadas) · limpa ficheiros órfãos</div>
+      </div>
+      <div class="routine-body">
+        <div class="routine-row"><span class="routine-key">Output</span><span class="routine-val">Lifecycle action log</span></div>
+        <div class="routine-row"><span class="routine-key">Destinatário</span><span class="routine-val">Nova (aprovação de acções destrutivas)</span></div>
+        <div class="routine-row"><span class="routine-key">Depende de</span><span class="routine-val">Aprovação da Nova antes de qualquer eliminação</span></div>
+        <div class="routine-row" style="border-bottom:none"><span class="routine-key">Se falhar</span><span class="routine-val" style="color:var(--red)">Backlog de páginas inactivas acumula — Nova agenda limpeza manual</span></div>
+      </div>
+    </div>
+    <div class="routine-card routine-r7">
+      <div class="card-corner-bl"></div><div class="card-corner-br"></div>
+      <div class="routine-header">
+        <div class="routine-code">Floor 2 · Secretária Geral · R7</div>
+        <div class="routine-name">Weekly Wrap</div>
+      </div>
+      <div style="padding:0.8rem 1.5rem 0">
+        <div class="routine-trigger">
+          <span class="trigger-time">Sexta · 17:00 WAT</span>
+          <span style="color:var(--gold-muted);opacity:0.4">·</span>
+          <span class="trigger-freq">Semanal</span>
+        </div>
+      </div>
+      <div class="routine-process">
+        <div class="routine-process-label">Processo</div>
+        <div class="routine-process-text">Compila resumo semanal — iniciativas avançadas, fechadas, bloqueadas · actividade de agentes</div>
+      </div>
+      <div class="routine-body">
+        <div class="routine-row"><span class="routine-key">Output</span><span class="routine-val">Weekly wrap report</span></div>
+        <div class="routine-row"><span class="routine-key">Destinatário</span><span class="routine-val">André</span></div>
+        <div class="routine-row"><span class="routine-key">Depende de</span><span class="routine-val">Dados de R1–R6 da semana</span></div>
+        <div class="routine-row" style="border-bottom:none"><span class="routine-key">Se falhar</span><span class="routine-val" style="color:var(--red)">André termina a semana sem visão consolidada — Byte escalona síntese manual</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="max-width:1100px;margin:3rem auto 0;padding:1.5rem;background:var(--parchment);border:1px solid var(--gold-muted);display:flex;gap:1.5rem;align-items:flex-start">
+    <div style="font-family:var(--font-mono);font-size:1.5rem;color:var(--gold-muted);flex-shrink:0;line-height:1">◈</div>
+    <div>
+      <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--gold-muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.4rem">Nota Operacional</div>
+      <div style="font-family:var(--font-body);font-size:0.95rem;color:var(--ink);line-height:1.6;font-style:italic">
+        O Floor 2 aloja rotinas automáticas — não agentes persistentes. Cada rotina é um ciclo de processo com trigger definido, output canónico, e destinatário. A Secretária Geral não decide nem interpreta — executa com precisão e escalona quando necessário.
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function enterCatalog() {
+  document.getElementById('cover').style.opacity = '0';
+  document.getElementById('cover').style.transition = 'opacity 0.6s ease';
+  setTimeout(() => {
+    document.getElementById('cover').style.display = 'none';
+    const nav = document.getElementById('floor-nav');
+    nav.style.display = 'flex';
+    showFloor(5);
+    revealCards();
+  }, 600);
+}
+
+function showFloor(num) {
+  document.querySelectorAll('.floor-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn[data-floor]').forEach(b => b.classList.remove('active'));
+  const section = document.getElementById('floor-' + num);
+  if (section) {
+    section.classList.add('active');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    setTimeout(revealCards, 100);
+  }
+  const btn = document.querySelector('.nav-btn[data-floor="' + num + '"]');
+  if (btn) btn.classList.add('active');
+}
+
+function revealCards() {
+  const cards = document.querySelectorAll('.floor-section.active .agent-card, .floor-section.active .unit-card, .floor-section.active .routine-card, .floor-section.active .special-teams-card');
+  cards.forEach((card, i) => {
+    setTimeout(() => {
+      card.classList.add('revealed');
+    }, i * 120);
+  });
+}
+
+// Also reveal unit-header-badge units on floor 4
+document.addEventListener('DOMContentLoaded', () => {
+  // Keyboard nav
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const cover = document.getElementById('cover');
+      if (cover.style.display !== 'none') enterCatalog();
+    }
+  });
+});
+</script>
+</body>
+</html>
