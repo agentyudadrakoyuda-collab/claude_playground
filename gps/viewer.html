@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11171a">
+<title>Trip Viewer</title>
+<style>
+:root{--bg:#11171a;--card:#1a2226;--line:#2a353a;--ink:#f2f5f6;--muted:#9aa7ad;--acc:#ff7a2f}
+[hidden]{display:none!important}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,label.btn{font:inherit;color:inherit;border:0;cursor:pointer}
+.start{min-height:100%;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right)) 24px max(16px,env(safe-area-inset-left))}
+.box{max-width:480px;width:100%;display:grid;gap:14px;text-align:center}
+h1{margin:0;font-size:24px}p{margin:0;color:var(--muted);line-height:1.5;font-size:15px}
+.drop{border:2px dashed var(--line);border-radius:18px;padding:28px 18px;display:grid;gap:12px;justify-items:center}.drop.over{border-color:var(--acc)}
+.btn{border-radius:22px;padding:11px 18px;font-weight:700;background:var(--acc);color:#fff;display:inline-block}
+.btn.ghost{background:rgba(255,255,255,.1)}
+.status{font-size:14px;color:var(--muted);min-height:20px}
+.viewer{position:fixed;inset:0;display:none}.viewer iframe{border:0;width:100%;height:100%}
+.bar{position:fixed;z-index:5;left:max(10px,env(safe-area-inset-left));top:calc(122px + env(safe-area-inset-top));display:flex;gap:6px}.bar .btn{padding:7px 12px;font-size:13px}
+input[type=file]{position:absolute;opacity:0;width:1px;height:1px}
+</style>
+</head>
+<body>
+<section class="start" id="start"><div class="box">
+  <h1>Trip Viewer</h1>
+  <p>Open a GPX file from the GPS Recorder or any other app. You get an interactive 3D page with speed, elevation, turns and stops, saved as one HTML file that works offline.</p>
+  <div class="drop" id="drop"><label class="btn" for="file">Choose GPX file</label><input id="file" type="file"><span style="font-size:13px;color:var(--muted)">or drop it here</span></div>
+  <div class="status" id="status" role="status"></div>
+  <p style="font-size:13px">Building the page needs internet once, to download the satellite imagery, terrain and 3D engine. <a href="recorder.html" style="color:var(--acc)">Open the GPS Recorder</a></p>
+</div></section>
+<section class="viewer" id="viewer"><iframe id="frame" title="Trip viewer"></iframe>
+  <div class="bar"><button class="btn" id="save">⬇ Save HTML</button><button class="btn ghost" id="another">Open another</button></div></section>
+<script src="trip-core.js"></script>
+<script src="trip-view.js"></script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s); let html = null, name = 'trip';
+async function open(file) {
+  const st = $('#status');
+  try {
+    st.textContent = 'Reading ' + file.name + '…';
+    const trip = TripCore.parseGPX(await file.text(), file.name.replace(/\.\w+$/, ''));
+    const A = TripCore.analyze(trip);
+    html = await TripCore.buildHTML(A, m => st.textContent = m); name = A.name;
+    $('#frame').srcdoc = html; $('#start').style.display = 'none'; $('#viewer').style.display = 'block'; st.textContent = '';
+  } catch (e) { st.textContent = e.message || 'Couldn’t open that file.'; }
+}
+$('#file').onchange = e => { if (e.target.files[0]) open(e.target.files[0]); e.target.value = ''; };
+['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); $('#drop').classList.add('over'); }));
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) $('#drop').classList.remove('over'); });
+document.addEventListener('drop', e => { e.preventDefault(); $('#drop').classList.remove('over'); if (e.dataTransfer.files[0]) open(e.dataTransfer.files[0]); });
+$('#save').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' })); a.download = (name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'trip') + '.html'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); };
+$('#another').onclick = () => { $('#viewer').style.display = 'none'; $('#start').style.display = ''; $('#frame').srcdoc = ''; };
+</script>
+</body>
+</html>

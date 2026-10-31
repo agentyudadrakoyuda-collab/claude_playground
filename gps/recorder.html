@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11171a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>GPS Recorder</title>
+<style>
+:root{--bg:#11171a;--card:#1a2226;--line:#2a353a;--ink:#f2f5f6;--muted:#9aa7ad;--go:#22a861;--stop:#e5484d;--pause:#f5a524;--acc:#ff7a2f}
+[hidden]{display:none!important}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+main{max-width:560px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:grid;gap:14px}
+header{display:flex;align-items:center;justify-content:space-between}
+h1{font-size:20px;margin:0;letter-spacing:.01em}
+.gps{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}.gps i{width:9px;height:9px;border-radius:50%;background:#555}.gps.ok i{background:var(--go)}.gps.weak i{background:var(--pause)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+.timer{font-size:56px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:.02em;line-height:1}
+.state{text-align:center;color:var(--muted);margin-top:6px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.m{background:rgba(255,255,255,.04);border-radius:12px;padding:10px 12px}.m .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.m .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}.m .v small{font-size:13px;color:var(--muted);font-weight:600;margin-left:3px}
+.controls{display:flex;gap:12px;justify-content:center;align-items:center}
+.big{width:96px;height:96px;border-radius:50%;font-weight:800;font-size:17px;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.big.go{background:var(--go)}.big.pause{background:var(--pause);color:#1a1300}.big.stop{background:var(--stop)}
+.small{border-radius:22px;padding:10px 16px;background:rgba(255,255,255,.1);font-weight:700;font-size:14px}
+.tip{font-size:13px;color:var(--muted);line-height:1.45;margin:0}
+.banner{background:#3a2a10;border:1px solid #6b4a12;border-radius:14px;padding:12px 14px;font-size:14px;display:grid;gap:10px}
+.banner .row{display:flex;gap:8px;flex-wrap:wrap}
+h2{font-size:15px;margin:6px 2px 0;color:var(--muted);font-weight:700}
+.rec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:8px}
+.rec b{font-size:15px}.rec .meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rec .acts{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border-radius:16px;padding:7px 12px;background:rgba(255,255,255,.08);font-size:13px;font-weight:700}
+.chip.pri{background:var(--acc);color:#fff}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:10px}
+.dark{position:fixed;inset:0;background:#000;color:#5c6a70;display:grid;place-items:center;text-align:center;z-index:20;padding:24px}
+.dark .t{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;color:#8a979c}
+.dark p{font-size:13px;margin:8px 0 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));background:#2c3a40;color:#fff;padding:11px 15px;border-radius:12px;font-size:14px;z-index:30;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>GPS Recorder</h1><span class="gps" id="gps"><i></i><span id="gpsTxt">GPS off</span></span></header>
+  <div class="banner" id="resume" hidden><span id="resumeTxt"></span><div class="row"><button class="small" id="resumeGo">Continue recording</button><button class="small" id="resumeEnd">Finish and save</button></div></div>
+  <section class="card">
+    <div class="timer" id="timer">0:00:00</div>
+    <div class="state" id="state">Ready</div>
+    <div class="grid">
+      <div class="m"><div class="k">Distance</div><div class="v" id="mDist">0.00<small>km</small></div></div>
+      <div class="m"><div class="k">Speed</div><div class="v" id="mSpd">0<small>km/h</small></div></div>
+      <div class="m"><div class="k">Altitude</div><div class="v" id="mAlt">—<small>m</small></div></div>
+      <div class="m"><div class="k">Accuracy</div><div class="v" id="mAcc">—<small>m</small></div></div>
+    </div>
+  </section>
+  <div class="controls" id="controls"></div>
+  <p class="tip" id="tip">Keep this page open with the screen on while you drive. Phones stop GPS for web pages when the screen turns off, so use <b>Dark screen</b> to save battery instead of locking the phone. Every point is saved on the phone as it comes in.</p>
+  <h2>Recordings</h2>
+  <div id="list"></div>
+</main>
+<div class="dark" id="dark" hidden><div><div class="t" id="darkTime">0:00:00</div><p id="darkInfo"></p><p>Recording continues. Tap twice to show the screen.</p></div></div>
+<div class="toast" id="toast" hidden></div>
+<script src="trip-core.js"></script>
+<script src="trip-view.js"></script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const fmtT = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 3600) + ':' + String(Math.floor(s % 3600 / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+const fmtDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h} h ${m} min` : `${m} min ${s % 60} s`; };
+let toastT; function toast(m, ms = 4500) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, ms); }
+
+/* ---------- storage: IndexedDB, one record per recording ---------- */
+let db;
+const dbReady = new Promise((ok, bad) => { const r = indexedDB.open('gps-recorder', 1); r.onupgradeneeded = () => r.result.createObjectStore('tracks', { keyPath: 'id' }); r.onsuccess = () => { db = r.result; ok(); }; r.onerror = () => bad(r.error); });
+const tx = (mode, fn) => new Promise((ok, bad) => { const t = db.transaction('tracks', mode), st = t.objectStore('tracks'), req = fn(st); t.oncomplete = () => ok(req && req.result); t.onerror = () => bad(t.error); });
+const saveTrack = tr => tx('readwrite', s => s.put(tr));
+const allTracks = () => tx('readonly', s => s.getAll());
+const delTrack = id => tx('readwrite', s => s.delete(id));
+
+/* ---------- recording ---------- */
+let cur = null, watchId = null, wl = null, hiddenAt = null, lastSave = 0, lastFix = null;
+const stats = tr => { let d = 0, moving = 0; tr.segs.forEach(s => { for (let i = 1; i < s.length; i++) { const dd = TripCore.hav(s[i - 1].lon, s[i - 1].lat, s[i].lon, s[i].lat), dt = (s[i].t - s[i - 1].t) / 1000; if (dd > 2 || dt > 5) d += dd; if (dd / dt > 0.8) moving += dt; } }); return { d, moving, pts: tr.segs.reduce((a, s) => a + s.length, 0) }; };
+const elapsed = tr => (tr.activeMs + (tr.state === 'recording' && tr.resumedAt ? Date.now() - tr.resumedAt : 0)) / 1000;
+async function wakeLock(on) { try { if (on && !wl && navigator.wakeLock) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => wl = null); } else if (!on && wl) { await wl.release(); wl = null; } } catch (e) {} }
+function startGPS() {
+  if (!('geolocation' in navigator)) { toast('This browser can’t use GPS.'); return false; }
+  if (watchId != null) return true;
+  watchId = navigator.geolocation.watchPosition(onFix, err => {
+    if (err.code === 1) { toast('Location permission is off. Allow location for this page in the browser settings, then press Start again.', 8000); setGPS('off', 'No permission'); if (cur && cur.state === 'recording') pause(); }
+    else setGPS('weak', 'Searching…');
+  }, { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+  return true;
+}
+function stopGPS() { if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null; setGPS('off', 'GPS off'); }
+function setGPS(cls, txt) { $('#gps').className = 'gps ' + (cls === 'off' ? '' : cls); $('#gpsTxt').textContent = txt; }
+function onFix(pos) {
+  const c = pos.coords, p = { t: pos.timestamp || Date.now(), lat: c.latitude, lon: c.longitude, ele: c.altitude, spd: c.speed, crs: c.heading, acc: c.accuracy };
+  if (!cur) return;
+  lastFix = p; setGPS(c.accuracy <= 20 ? 'ok' : 'weak', `±${Math.round(c.accuracy)} m`);
+  $('#mAcc').innerHTML = `${Math.round(c.accuracy)}<small>m</small>`;
+  if (c.altitude != null) $('#mAlt').innerHTML = `${Math.round(c.altitude)}<small>m</small>`;
+  if (!cur || cur.state !== 'recording') return;
+  if (c.accuracy > 40) return;                                   // too vague to keep
+  const seg = cur.segs[cur.segs.length - 1], prev = seg[seg.length - 1];
+  if (prev && p.t - prev.t < 900) return;                        // about one point per second
+  if (prev && p.spd == null) { const dt = (p.t - prev.t) / 1000; p.spd = TripCore.hav(prev.lon, prev.lat, p.lon, p.lat) / dt; }
+  seg.push(p); render();
+  if (Date.now() - lastSave > 5000) { lastSave = Date.now(); saveTrack(cur); }
+}
+function newTrack() { const now = Date.now(); return { id: 'rec-' + now, name: 'Drive · ' + new Date(now).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }), created: now, state: 'recording', segs: [[]], activeMs: 0, resumedAt: now }; }
+async function start() { if (!startGPS()) return; cur = newTrack(); await saveTrack(cur); wakeLock(true); toast('Recording. Keep this page open; use Dark screen to save battery.'); render(); }
+async function pause() { if (!cur) return; cur.activeMs += Date.now() - cur.resumedAt; cur.resumedAt = null; cur.state = 'paused'; await saveTrack(cur); wakeLock(false); render(); }
+async function resume() { if (!cur) return; startGPS(); cur.state = 'recording'; cur.resumedAt = Date.now(); if (cur.segs[cur.segs.length - 1].length) cur.segs.push([]); await saveTrack(cur); wakeLock(true); render(); }
+let stopArmed = 0;
+async function stop() {
+  if (Date.now() - stopArmed > 3000) { stopArmed = Date.now(); toast('Tap Stop again to finish the recording.', 3000); return; }
+  if (cur.state === 'recording') cur.activeMs += Date.now() - cur.resumedAt;
+  cur.resumedAt = null; cur.segs = cur.segs.filter(s => s.length); cur.state = 'done'; const st = stats(cur);
+  if (st.pts < 2) { await delTrack(cur.id); toast('Not enough GPS points were recorded, so nothing was saved.'); }
+  else { await saveTrack(cur); toast(`Saved: ${(st.d / 1000).toFixed(2)} km, ${fmtDur(elapsed(cur))}.`); }
+  cur = null; stopGPS(); wakeLock(false); $('#dark').hidden = true; render(); renderList();
+}
+
+/* ---------- screen ---------- */
+function render() {
+  const c = $('#controls');
+  if (!cur) { c.innerHTML = '<button class="big go" id="bStart">Start</button>'; $('#bStart').onclick = start; $('#state').textContent = 'Ready'; $('#timer').textContent = '0:00:00'; $('#mDist').innerHTML = '0.00<small>km</small>'; $('#mSpd').innerHTML = '0<small>km/h</small>'; $('#mAcc').innerHTML = '—<small>m</small>'; $('#mAlt').innerHTML = '—<small>m</small>'; return; }
+  const rec = cur.state === 'recording';
+  c.innerHTML = `${rec ? '<button class="big pause" id="bPause">Pause</button>' : '<button class="big go" id="bResume">Resume</button>'}<button class="big stop" id="bStop">Stop</button><button class="small" id="bDark">Dark screen</button>`;
+  rec ? $('#bPause').onclick = pause : $('#bResume').onclick = resume; $('#bStop').onclick = stop; $('#bDark').onclick = () => { $('#dark').hidden = false; };
+  const st = stats(cur); $('#state').textContent = rec ? `Recording · ${st.pts} points${cur.segs.length > 1 ? ` · ${cur.segs.length} parts` : ''}` : 'Paused';
+  $('#mDist').innerHTML = `${(st.d / 1000).toFixed(2)}<small>km</small>`;
+  $('#mSpd').innerHTML = `${lastFix && rec && lastFix.spd != null ? Math.round(lastFix.spd * 3.6) : 0}<small>km/h</small>`;
+}
+setInterval(() => { if (!cur) return; const e = fmtT(elapsed(cur)); $('#timer').textContent = e; $('#darkTime').textContent = e; const st = stats(cur); $('#darkInfo').textContent = `${(st.d / 1000).toFixed(2)} km · ${cur.state === 'recording' ? 'recording' : 'paused'} · ${lastFix ? '±' + Math.round(lastFix.acc) + ' m' : 'no GPS yet'}`; }, 500);
+{ let taps = 0, tt; $('#dark').addEventListener('click', () => { taps++; clearTimeout(tt); tt = setTimeout(() => taps = 0, 600); if (taps >= 2) { $('#dark').hidden = true; taps = 0; } }); }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (cur) { hiddenAt = Date.now(); saveTrack(cur); } wl = null; return; }
+  if (cur && cur.state === 'recording') { wakeLock(true); if (hiddenAt && Date.now() - hiddenAt > 15000) toast(`The page was hidden for ${fmtDur((Date.now() - hiddenAt) / 1000)}. GPS may have paused in that time; that part will show as a gap.`, 8000); }
+  hiddenAt = null;
+});
+addEventListener('pagehide', () => { if (cur) saveTrack(cur); });
+
+/* ---------- saved recordings ---------- */
+async function renderList() {
+  const tracks = (await allTracks()).filter(t => t.state === 'done').sort((a, b) => b.created - a.created);
+  $('#list').innerHTML = tracks.length ? tracks.map(t => { const st = stats(t); return `<div class="rec"><b>${TripCore.esc(t.name)}</b>
+    <span class="meta">${new Date(t.created).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} · ${(st.d / 1000).toFixed(2)} km · ${fmtDur(t.activeMs / 1000)} · ${st.pts} points${t.segs.length > 1 ? ` · ${t.segs.length} parts` : ''}</span>
+    <span class="acts"><button class="chip pri" data-html="${t.id}">Interactive HTML</button><button class="chip" data-gpx="${t.id}">GPX</button><button class="chip" data-ren="${t.id}">Rename</button><button class="chip" data-del="${t.id}">Delete</button></span></div>`; }).join('') : '<div class="empty">No recordings yet. Press Start when you set off.</div>';
+  const get = id => tracks.find(t => t.id === id);
+  $('#list').querySelectorAll('[data-gpx]').forEach(b => b.onclick = () => { const t = get(b.dataset.gpx); download(new Blob([TripCore.toGPX(t.name, t.segs)], { type: 'application/gpx+xml' }), fileName(t.name) + '.gpx'); });
+  $('#list').querySelectorAll('[data-html]').forEach(b => b.onclick = async () => {
+    const t = get(b.dataset.html); b.disabled = true; const label = b.textContent;
+    try { const A = TripCore.analyze({ name: t.name, segs: t.segs, timed: true }); const html = await TripCore.buildHTML(A, m => { b.textContent = m; });
+      download(new Blob([html], { type: 'text/html' }), fileName(t.name) + '.html'); toast('Saved the interactive HTML. It works offline; open it in Chrome or share it.'); }
+    catch (e) { toast(e.message || 'Couldn’t build the HTML.'); }
+    b.disabled = false; b.textContent = label; });
+  $('#list').querySelectorAll('[data-ren]').forEach(b => b.onclick = async () => { const t = get(b.dataset.ren), n = prompt('Name for this recording:', t.name); if (n && n.trim()) { t.name = n.trim().slice(0, 80); await saveTrack(t); renderList(); } });
+  $('#list').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (b.dataset.armed) { await delTrack(b.dataset.del); renderList(); } else { b.dataset.armed = 1; b.textContent = 'Tap again to delete'; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Delete'; } }, 3000); } });
+}
+const fileName = n => n.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'trip';
+function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
+
+/* ---------- boot: pick up a recording that was interrupted ---------- */
+(async () => {
+  await dbReady;
+  const open = (await allTracks()).find(t => t.state === 'recording' || t.state === 'paused');
+  if (open) {
+    if (open.state === 'recording' && open.resumedAt) { const lastT = Math.max(open.resumedAt, ...open.segs.flat().map(p => p.t)); open.activeMs += Math.max(0, lastT - open.resumedAt); open.resumedAt = null; open.state = 'paused'; await saveTrack(open); }
+    $('#resume').hidden = false; $('#resumeTxt').textContent = `“${open.name}” was interrupted (${(stats(open).d / 1000).toFixed(2)} km so far).`;
+    $('#resumeGo').onclick = async () => { cur = open; $('#resume').hidden = true; await resume(); };
+    $('#resumeEnd').onclick = async () => { cur = open; $('#resume').hidden = true; stopArmed = Date.now(); await stop(); };
+  }
+  render(); renderList();
+})();
+</script>
+</body>
+</html>
