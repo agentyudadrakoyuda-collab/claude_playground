@@ -38,6 +38,7 @@ button,input,select{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
 :focus-visible{outline:2px solid var(--a);outline-offset:2px}
 [hidden]{display:none!important}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none}
 #map{position:fixed;inset:0}
 .maplibregl-ctrl-attrib{font-size:10px}
 .maplibregl-ctrl-bottom-right{bottom:calc(var(--sheet-h) + 4px)}
@@ -82,7 +83,7 @@ button{cursor:pointer;border:0;background:none}
 .gapchip{background:var(--card);box-shadow:var(--shadow);border-radius:18px;padding:7px 12px;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;margin-bottom:8px}
 
 /* ---- sheet ---- */
-.sheet{position:fixed;z-index:6;left:0;right:0;bottom:0;background:var(--card);border-radius:18px 18px 0 0;box-shadow:0 -2px 18px rgba(0,0,0,.16);display:flex;flex-direction:column;max-height:calc(100% - 80px - env(safe-area-inset-top));padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.sheet{position:fixed;z-index:6;left:0;right:0;bottom:0;background:var(--card);border-radius:18px 18px 0 0;box-shadow:0 -2px 18px rgba(0,0,0,.16);display:flex;flex-direction:column;max-height:min(62%,calc(100% - 80px - env(safe-area-inset-top)));padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 .handle{display:grid;place-items:center;height:22px;flex:none;touch-action:none;cursor:grab}
 .handle i{width:40px;height:5px;border-radius:3px;background:var(--line)}
 .peek{padding:0 16px 10px;display:grid;gap:8px;flex:none}
@@ -186,6 +187,7 @@ button{cursor:pointer;border:0;background:none}
 #drawHint{flex:1;min-width:0}
 @media (min-width:900px){.drawhint{right:auto;width:400px}}
 body.drawing .top{display:none}
+@media (max-width:899px){body.sheet-open .fabs>*:not(#camBtn){display:none}}
 @media (prefers-reduced-motion: reduce){.rec .blink{animation:none}}
 </style>
 </head>
@@ -255,8 +257,8 @@ body.drawing .top{display:none}
     <div class="panel" id="panel-trip"></div>
     <div class="panel" id="panel-tracks" hidden>
       <div class="drop" id="drop">Drop KMZ, KML or GPX files here
-        <label class="btn" for="file" tabindex="0">Import files</label>
-        <input id="file" type="file" accept=".kmz,.kml,.gpx" multiple hidden>
+        <button class="btn" id="importBtn" type="button">Import files</button>
+        <input id="file" type="file" multiple class="vh" tabindex="-1" aria-hidden="true">
       </div>
       <div class="tlist" id="tlist"></div>
       <p class="foot">Set one track as <b style="color:var(--a)">A</b> (the reference) and another as <b style="color:var(--b)">B</b> to race them. Tracks are saved in this browser on this device. Use GPX to move one to another device or app.</p>
@@ -384,10 +386,15 @@ function parseGPX(text,fname){ const doc=new DOMParser().parseFromString(text,'a
   for(const s of doc.getElementsByTagName('trkseg')) segs.push([...s.getElementsByTagName('trkpt')].map(pt));
   if(!segs.some(s=>s.length>1)) for(const r of doc.getElementsByTagName('rte')) segs.push([...r.getElementsByTagName('rtept')].map(pt));
   const cr=doc.documentElement.getAttribute('creator'); return finalize(name,segs,cr?'GPX · '+cr:'GPX file'); }
-async function parseFile(f){ const n=f.name.toLowerCase();
-  if(n.endsWith('.gpx')) return parseGPX(await f.text(),f.name);
-  if(n.endsWith('.kml')) return parseKML(await f.text(),f.name);
-  if(n.endsWith('.kmz')){ if(!window.JSZip) throw new Error('nozip'); const z=await JSZip.loadAsync(f); const e=z.file('doc.kml')||z.file(/\.kml$/i)[0]; if(!e) throw new Error('bad'); return parseKML(await e.async('string'),f.name); }
+async function parseFile(f){ const n=(f.name||'').toLowerCase();
+  // Phones often hand over files without a usable extension or type, so look at the content too.
+  const head=new Uint8Array(await f.slice(0,4).arrayBuffer()), isZip=head[0]===0x50&&head[1]===0x4b;
+  let kind=n.endsWith('.kmz')||isZip?'kmz':n.endsWith('.gpx')?'gpx':n.endsWith('.kml')?'kml':null;
+  if(!isZip&&kind==='kmz') kind=null;
+  if(!kind){ const txt=(await f.slice(0,4000).text()).toLowerCase(); kind=txt.includes('<gpx')?'gpx':txt.includes('<kml')?'kml':null; }
+  if(kind==='gpx') return parseGPX(await f.text(),f.name);
+  if(kind==='kml') return parseKML(await f.text(),f.name);
+  if(kind==='kmz'){ if(!window.JSZip) throw new Error('nozip'); const z=await JSZip.loadAsync(f); const e=z.file('doc.kml')||z.file(/\.kml$/i)[0]; if(!e) throw new Error('bad'); return parseKML(await e.async('string'),f.name); }
   throw new Error('type'); }
 function toGPX(tr){ const t0=tr.start?Date.parse(tr.start):Date.UTC(2000,0,1);
   const segs=tr.segs.map(s=>'  <trkseg>\n'+s.map(p=>`   <trkpt lat="${p[2].toFixed(6)}" lon="${p[1].toFixed(6)}">${p[3]!=null?`<ele>${(+p[3]).toFixed(1)}</ele>`:''}<time>${new Date(t0+p[0]*1000).toISOString()}</time></trkpt>`).join('\n')+'\n  </trkseg>').join('\n');
@@ -513,13 +520,14 @@ function activeTracks(){return [byId(A),byId(B)].filter(Boolean);}
 function duration(){return Math.max(0,...activeTracks().map(t=>t.stats.elapsed));}
 function setPlaying(p){ playing=p; $('#playIcon').innerHTML=p?'<path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/>':'<path d="M7 5v14l11-7z" fill="currentColor"/>';
   $('#tPlay').setAttribute('aria-label',p?'Pause':'Play'); $('#tBack').classList.toggle('on',p&&dir<0); wakeLock(p||recording); }
-function play(d){ const dur=duration(); dir=d; if(d>0&&tc>=dur) tc=0; if(d<0&&tc<=0) tc=dur; setPlaying(true); }
+function play(d){ const dur=duration(); dir=d; if(cam==='free'&&!drawing) setCam('follow'); if(d>0&&tc>=dur) tc=0; if(d<0&&tc<=0) tc=dur; setPlaying(true); }
 const CAMS=['follow','driver','free'], CAMLBL={follow:'Driver view',driver:'Overview',free:'Re-center'};
 function setCam(m){ cam=m; $('#camLbl').textContent=CAMLBL[m]; need=true;
   if(!map) return;
   if(m==='driver'){ map.easeTo({pitch:60,zoom:Math.max(map.getZoom(),16.5),padding:camPadding(),duration:700}); }
   else if(m==='follow'){ map.easeTo({pitch:0,bearing:0,padding:camPadding(),duration:600}); smoothBear=null; } }
-function camPadding(){ const wide=innerWidth>=900, h=innerHeight; return cam==='driver'?{top:h*0.38,bottom:wide?20:sheetH(),left:wide?420:0,right:0}:{top:60,bottom:wide?0:sheetH(),left:wide?420:0,right:0}; }
+function camPadding(){ const wide=innerWidth>=900, h=innerHeight, bottom=wide?0:Math.min(sheetH(),h*0.62), free=h-bottom;
+  return cam==='driver'?{top:Math.round(free*0.4),bottom,left:wide?420:0,right:0}:{top:Math.min(60,free*0.2),bottom,left:wide?420:0,right:0}; }
 $('#camBtn').onclick=()=>{ if(cam==='free'||cam==='driver'){ if(cam==='driver'){ setCam('free'); fitTracks(); return; } setCam('follow'); } else setCam('driver'); };
 function angDiff(a,b){let d=b-a;while(d>180)d-=360;while(d<-180)d+=360;return d;}
 let last=performance.now(), lastUI=0;
@@ -770,7 +778,7 @@ $('#pillTitle').onclick=()=>{ showTab('tracks'); expandSheet(); };
 const sheet=$('#sheet');
 function expandSheet(){ sheet.classList.add('open'); syncSheet(); }
 function collapseSheet(){ sheet.classList.remove('open'); syncSheet(); }
-function syncSheet(){ requestAnimationFrame(()=>{ const h=innerWidth>=900?0:sheetH(); document.documentElement.style.setProperty('--sheet-h',h+'px'); $('#moreBtn').textContent=sheet.classList.contains('open')?'Less':'More'; need=true; updateUI(); }); }
+function syncSheet(){ requestAnimationFrame(()=>{ const h=innerWidth>=900?0:sheetH(); document.documentElement.style.setProperty('--sheet-h',h+'px'); $('#moreBtn').textContent=sheet.classList.contains('open')?'Less':'More'; document.body.classList.toggle('sheet-open',sheet.classList.contains('open')); need=true; updateUI(); }); }
 $('#moreBtn').onclick=()=>sheet.classList.contains('open')?collapseSheet():expandSheet();
 { let y0=null; const h=$('#handle');
   h.addEventListener('pointerdown',e=>{y0=e.clientY;h.setPointerCapture(e.pointerId);});
@@ -780,7 +788,7 @@ new ResizeObserver(syncSheet).observe(sheet);
 addEventListener('resize',syncSheet);
 // files
 $('#file').onchange=e=>{ importFiles([...e.target.files]); e.target.value=''; };
-document.querySelector('label[for=file]').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#file').click();} });
+$('#importBtn').onclick=()=>$('#file').click();
 ['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{ if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){ e.preventDefault(); $('#drop').classList.add('over'); } }));
 document.addEventListener('dragleave',e=>{ if(!e.relatedTarget) $('#drop').classList.remove('over'); });
 document.addEventListener('drop',e=>{ $('#drop').classList.remove('over'); if(e.dataTransfer&&e.dataTransfer.files.length){ e.preventDefault(); showTab('tracks'); expandSheet(); importFiles([...e.dataTransfer.files]); } });
