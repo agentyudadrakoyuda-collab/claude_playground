@@ -641,9 +641,27 @@ function renderTrip(){ const a=byId(A), el=$('#panel-trip');
     ${st('Stops',s.stops)}${st('Climb',s.gain==null?'—':Math.round(s.gain),s.gain==null?'':'m')}${st('80+ km/h',fmtDur(s.fast))}</div>
     <div class="chart"><canvas id="chartTrip" aria-label="Speed and elevation over time; tap to jump"></canvas></div>
     <div class="card2" style="margin-top:14px"><h4>Share with guests</h4><p>Save this route as one HTML file with the street map built in. Guests open it on their phone and navigate with GPS, no internet needed.</p>
-      <div class="row"><button class="btn" id="offBtn">Save offline map</button><button class="btn ghost" id="gpxBtn">Export GPX</button></div></div>
+      <div class="row"><button class="btn" id="offBtn">Save offline map</button><button class="btn" id="flyBtn">3D flyover</button><button class="btn ghost" id="gpxBtn">Export GPX</button></div>
+      <p class="help" style="margin-top:8px">3D flyover makes one HTML file with satellite imagery and terrain: the camera flies along the drive, and it can save the flight as a video.</p></div>
+    <div class="card2"><h4>Trim</h4><p>Keep only the part you need, for example the stretch before the GPS stopped.</p>
+      <div class="field"><label for="trimA">Start <output id="trimAOut"></output></label><input id="trimA" type="range" min="0" max="1000" value="0"></div>
+      <div class="field"><label for="trimB">End <output id="trimBOut"></output></label><input id="trimB" type="range" min="0" max="1000" value="1000"></div>
+      <div class="row"><button class="btn ghost" id="bestBtn">Select best part</button><button class="btn" id="trimBtn">Save trimmed copy</button></div></div>
     <p class="foot">${esc(a.source||'')}${a.note?' · '+esc(a.note):''}${a.navSteps?' · Turn-by-turn directions show in the green banner while it plays.':''}</p>`;
-  bindChart($('#chartTrip')); $('#offBtn').onclick=()=>exportOffline(a); $('#gpxBtn').onclick=()=>downloadGPX(a); }
+  bindChart($('#chartTrip')); $('#offBtn').onclick=()=>exportOffline(a); $('#flyBtn').onclick=()=>exportFlyover(a); $('#gpxBtn').onclick=()=>downloadGPX(a); bindTrim(a); }
+/* ---- trim ---- */
+function bindTrim(tr){ const T=tr.stats.elapsed, ta=$('#trimA'), tb=$('#trimB');
+  const val=()=>{ let a=+ta.value/1000*T, b=+tb.value/1000*T; if(a>b) [a,b]=[b,a]; return [a,b]; };
+  const show=(moved)=>{ const [a,b]=val(), sa=stateAt(tr,a), sb=stateAt(tr,b); $('#trimAOut').textContent=`${fmtDur(a)} · ${km(sa.d)} km`; $('#trimBOut').textContent=`${fmtDur(b)} · ${km(sb.d)} km`;
+    $('#trimBtn').textContent=`Save trimmed copy (${km(sb.d-sa.d)} km, ${fmtDur(b-a)})`; if(moved!=null){ setPlaying(false); tc=moved===0?a:b; need=true; } };
+  ta.oninput=()=>show(0); tb.oninput=()=>show(1); show();
+  $('#bestBtn').onclick=()=>{ const segs={}; tr.pts.forEach(p=>{ const s=segs[p.seg]||(segs[p.seg]={a:p,b:p}); s.b=p; }); let best=null;
+    Object.values(segs).forEach(s=>{ if(!best||s.b.d-s.a.d>best.b.d-best.a.d) best=s; }); const t0=tr.pts[0].t;
+    ta.value=Math.ceil((best.a.t-t0)/T*1000); tb.value=Math.floor((best.b.t-t0)/T*1000); show(0); toast(`Selected the longest stretch without GPS gaps: ${km(best.b.d-best.a.d)} km.`); };
+  $('#trimBtn').onclick=()=>{ const [a,b]=val(); if(b-a<10){ toast('Choose a longer part to keep.'); return; } const t0=tr.pts[0].t, segs={};
+    tr.pts.forEach(p=>{ const rt=p.t-t0; if(rt<a-0.01||rt>b+0.01) return; (segs[p.seg]=segs[p.seg]||[]).push([rt-a,p.lon,p.lat,p.alt]); });
+    const raw={name:tr.name+' (trimmed)',start:tr.start?new Date(Date.parse(tr.start)+(t0+a)*1000).toISOString():null,tz:tr.tz,segs:Object.values(segs).filter(s=>s.length>1),source:'Trimmed from '+tr.name,synthetic:tr.synthetic};
+    try{ const nt=addTrack(raw,'solo'); tc=0; onTracksChanged(true); toast(`Saved “${nt.name}”: ${km(nt.stats.dist)} km, ${fmtDur(nt.stats.elapsed)}.`); }catch(e){ toast('That part has no usable points.'); } }; }
 function renderList(){ $('#tlist').innerHTML=tracks.map(t=>`<div class="trk">
     <span class="sw" style="background:${t.color}"></span><span class="nm" title="${esc(t.name)}">${esc(t.name)}</span>
     <span class="meta">${t.start?new Date(Date.parse(t.start)).toISOString().slice(0,10)+' · ':''}${km(t.stats.dist)} km · ${fmtDur(t.stats.elapsed)} · ${kmh(t.stats.avgMoving)} km/h</span>
@@ -652,16 +670,20 @@ function renderList(){ $('#tlist').innerHTML=tracks.map(t=>`<div class="trk">
       <button class="chipbtn ${t.id===A?'onA':''}" data-a="${t.id}" aria-pressed="${t.id===A}">A</button>
       <button class="chipbtn ${t.id===B?'onB':''}" data-b="${t.id}" aria-pressed="${t.id===B}">B</button>
       <button class="chipbtn" data-rev="${t.id}">⇄ Reverse</button>
+      <button class="chipbtn" data-ren="${t.id}">Rename</button>
       <button class="chipbtn" data-gpx="${t.id}">GPX</button>
       <button class="chipbtn" data-off="${t.id}">Offline map</button>
+      <button class="chipbtn" data-fly="${t.id}">3D flyover</button>
       ${t.builtin?'':`<button class="chipbtn" data-del="${t.id}">Delete</button>`}
     </span></div>`).join('');
   const L=$('#tlist');
   L.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const id=b.dataset.a; if(B===id)B=A; A=id; persist(); onTracksChanged(true);});
   L.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const id=b.dataset.b; if(B===id)B=null; else { if(A===id){toast('That track is already A. Pick a different one for B.');return;} B=id; } persist(); onTracksChanged(true);});
   L.querySelectorAll('[data-rev]').forEach(b=>b.onclick=()=>{ $('#revSrc').value=b.dataset.rev; showTab('create'); $('#revGo').scrollIntoView({block:'center',behavior:'smooth'}); });
+  L.querySelectorAll('[data-ren]').forEach(b=>b.onclick=()=>{ const tr=byId(b.dataset.ren), n=prompt('Name for this track (shown on offline maps and 3D flyovers):',tr.name); if(n&&n.trim()){ tr.name=n.trim().slice(0,80); persist(); onTracksChanged(false); } });
   L.querySelectorAll('[data-gpx]').forEach(b=>b.onclick=()=>downloadGPX(byId(b.dataset.gpx)));
   L.querySelectorAll('[data-off]').forEach(b=>b.onclick=()=>exportOffline(byId(b.dataset.off)));
+  L.querySelectorAll('[data-fly]').forEach(b=>b.onclick=()=>exportFlyover(byId(b.dataset.fly)));
   L.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Tap again to delete';setTimeout(()=>{if(b.isConnected){b.dataset.armed='';b.textContent='Delete';}},2500);return;}
     const id=b.dataset.del; tracks=tracks.filter(t=>t.id!==id); if(A===id){A=B;B=null;} if(B===id)B=null; if(!A&&tracks[0])A=tracks[0].id; persist(); onTracksChanged(true); });
   $('#revSrc').innerHTML=tracks.map(t=>`<option value="${t.id}" ${t.id===A?'selected':''}>${esc(t.name)}</option>`).join(''); }
@@ -843,5 +865,6 @@ if(map) map.once('style.load',()=>{ fitTracks(); setTimeout(()=>{ setCam('follow
 requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
 </script>
 <script src="offline.js"></script>
+<script src="flyover.js"></script>
 </body>
 </html>
