@@ -188,7 +188,9 @@ button{cursor:pointer;border:0;background:none}
 .drawhint{display:flex;align-items:center;gap:8px;position:fixed;z-index:7;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));min-height:50px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:9px 14px;font-size:14px;font-weight:600}
 #drawHint{flex:1;min-width:0}
 @media (min-width:900px){.drawhint{right:auto;width:400px}}
-body.drawing .top{display:none}
+body.drawing .top,body.drawing .speeds,body.drawing .sheet{display:none}
+body.drawing{--sheet-h:0px}
+.chipbtn:disabled{opacity:.45;cursor:default}
 @media (max-width:899px){body.sheet-open .fabs>*:not(#camBtn):not(#recFab){display:none}}
 @media (prefers-reduced-motion: reduce){.rec .blink{animation:none}}
 </style>
@@ -264,6 +266,7 @@ body.drawing .top{display:none}
         <button class="btn" id="importBtn" type="button">Import files</button>
         <input id="file" type="file" multiple class="vh" tabindex="-1" aria-hidden="true">
       </div>
+      <div class="row" style="margin-bottom:10px"><button class="btn ghost" id="clearMap">Clear map</button><span class="help">Hide all tracks without deleting them.</span></div>
       <div class="tlist" id="tlist"></div>
       <p class="foot">Set one track as <b style="color:var(--a)">A</b> (the reference) and another as <b style="color:var(--b)">B</b> to race them. Tracks are saved in this browser on this device. Use GPX to move one to another device or app.</p>
     </div>
@@ -272,7 +275,8 @@ body.drawing .top{display:none}
       <div class="card2">
         <h4>Record with GPS</h4>
         <p>Drive with your phone and record a new track. Keep this page open and the screen on.</p>
-        <label class="check"><input id="recGhost" type="checkbox" checked> Race against track A as a ghost</label>
+        <label class="check"><input id="recGhost" type="checkbox"> Show track A as a ghost to race against</label>
+        <p class="help">Leave it off to record on a clean map.</p>
         <button class="btn red" id="recStart">● Start recording</button>
       </div>
       <div class="card2">
@@ -498,9 +502,11 @@ function gradientOf(tr,solid){
   for(let k=0;k<N;k++){ const target=tot*k/(N-1); while(j<cum.length-1&&cum[j]<target) j++; const p=+(cum[j]/tot).toFixed(5); if(p<=lastP) continue; lastP=p; expr.push(p,rampColor(uniq[j].v)); }
   if(expr.length<7) return ['interpolate',['linear'],['line-progress'],0,tok['--a'],1,tok['--a']];
   return expr; }
+// While drawing or recording, the map shows only the new track (plus A when racing it as a ghost).
+function shown(r){ if(drawing) return null; if(recording) return r==='A'&&rec&&rec.ghost?byId(A):null; return byId(r==='A'?A:B); }
 function refreshTrackData(){
-  if(!mapReady) return; const comparing=!!byId(B);
-  for(const r of ['A','B']){ const tr=byId(r==='A'?A:B), src=map.getSource(r);
+  if(!mapReady) return; const comparing=!!shown('B');
+  for(const r of ['A','B']){ const tr=shown(r), src=map.getSource(r);
     if(!tr){ src.setData(emptyFC); map.getSource(r+'p').setData(emptyFC); map.getSource(r+'e').setData(emptyFC); markers[r].remove(); continue; }
     src.setData(lineOf(tr)); map.setPaintProperty(r+'-line','line-gradient',gradientOf(tr,comparing||tr.synthetic?tok['--'+r.toLowerCase()]:null));
     const f=tr.pts[0],l=tr.pts[tr.pts.length-1];
@@ -510,7 +516,7 @@ function refreshTrackData(){
 }
 let lastPassed=0;
 function updatePassed(now){ if(!mapReady||now-lastPassed<60) return; lastPassed=now;
-  for(const r of ['A','B']){ const tr=byId(r==='A'?A:B); if(!tr) continue; const st=stateAt(tr,Math.min(tc,tr.stats.elapsed));
+  for(const r of ['A','B']){ const tr=shown(r); if(!tr) continue; const st=stateAt(tr,Math.min(tc,tr.stats.elapsed));
     const c=tr.pts.slice(0,st.i+1).map(p=>[p.lon,p.lat]); c.push([st.lon,st.lat]); map.getSource(r+'p').setData({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:c.length>1?c:[c[0],c[0]]}}); } }
 function fitTracks(){ const ts=[byId(A),byId(B)].filter(Boolean); if(!ts.length||!map) return;
   let [[w,s],[e,n]]=ts[0].bounds; ts.slice(1).forEach(t=>{w=Math.min(w,t.bounds[0][0]);s=Math.min(s,t.bounds[0][1]);e=Math.max(e,t.bounds[1][0]);n=Math.max(n,t.bounds[1][1]);});
@@ -539,7 +545,7 @@ function frame(now){ const dt=Math.min(.1,(now-last)/1000); last=now; const dur=
   if(playing&&!recording){ tc+=dt*rate*dir; if(dir>0&&tc>=dur){tc=dur;setPlaying(false);} if(dir<0&&tc<=0){tc=0;setPlaying(false);} need=true; }
   if(recording) { tc=(Date.now()-rec.t0)/1000; need=true; }
   if(need&&map){
-    for(const r of ['A','B']){ const tr=byId(r==='A'?A:B); if(!tr||(recording&&r==='B')) continue; if(recording&&!rec.ghost&&r==='A') { markers.A.remove(); continue; }
+    for(const r of ['A','B']){ const tr=shown(r); if(!tr) continue;
       const st=stateAt(tr,Math.min(tc,tr.stats.elapsed)), h=headingAt(tr,Math.min(tc,tr.stats.elapsed)); markers[r].setLngLat([st.lon,st.lat]); if(h!=null) markers[r].setRotation(h); }
     updatePassed(now);
     const a=byId(A);
@@ -714,9 +720,9 @@ $('#revGo').onclick=async()=>{ const src=byId($('#revSrc').value); if(!src) retu
 
 /* ================= draw a route ================= */
 let drawing=false, wps=[], wpMarkers=[], draft=null, draftTimer=null;
-$('#drawStart').onclick=()=>{ if(!map) return; drawing=true; wps=[]; draft=null; $('#drawIdle').hidden=true; $('#drawActive').hidden=false; $('#drawName').value='Route · '+new Date().toLocaleDateString();
+$('#drawStart').onclick=()=>{ if(!map) return; drawing=true; refreshTrackData(); wps=[]; draft=null; $('#drawIdle').hidden=true; $('#drawActive').hidden=false; $('#drawName').value='Route · '+new Date().toLocaleDateString();
   $('#drawBar').hidden=false; document.body.classList.add('drawing'); setCam('free'); setPlaying(false); collapseSheet(); renderDraft(); };
-function stopDrawing(){ drawing=false; wpMarkers.forEach(m=>m.remove()); wpMarkers=[]; wps=[]; draft=null; $('#drawIdle').hidden=false; $('#drawActive').hidden=true; $('#drawBar').hidden=true; document.body.classList.remove('drawing'); if(map&&map.getSource('draft')) map.getSource('draft').setData(emptyFC); }
+function stopDrawing(){ drawing=false; wpMarkers.forEach(m=>m.remove()); wpMarkers=[]; wps=[]; draft=null; $('#drawIdle').hidden=false; $('#drawActive').hidden=true; $('#drawBar').hidden=true; document.body.classList.remove('drawing'); if(map&&map.getSource('draft')) map.getSource('draft').setData(emptyFC); refreshTrackData(); }
 $('#drawCancel').onclick=stopDrawing;
 $('#drawUndo').onclick=()=>{ wps.pop(); renderDraft(); };
 function onMapClick(e){ if(!drawing) return; wps.push([e.lngLat.lng,e.lngLat.lat]); renderDraft(); }
@@ -733,6 +739,7 @@ function renderDraft(){
     if(snap.length!==wps.length||!drawing) return; draft={...r,roads};
     map.getSource('draft').setData({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:r.segs[0].map(p=>[p[1],p[2]])}});
     let d=0; const s=r.segs[0]; for(let i=1;i<s.length;i++) d+=hav(s[i-1][1],s[i-1][2],s[i][1],s[i][2]);
+    $('#drawHint').textContent=`${fmtMin(r.duration)} · ${fmtDist(d)} · tap to add stops`;
     $('#drawInfo').innerHTML=`<div class="big">${fmtMin(r.duration)}</div><div class="sm">${fmtDist(d)} · ${wps.length} points · ${roads?'following roads':'straight lines at 50 km/h'}</div>`; },250);
 }
 $('#drawUndo2').onclick=()=>$('#drawUndo').click(); $('#drawSave2').onclick=()=>$('#drawSave').click(); $('#drawCancel2').onclick=stopDrawing;
@@ -746,7 +753,7 @@ let recording=false, rec=null, watchId=null;
 $('#recStart').onclick=()=>{ if(!('geolocation' in navigator)){toast('This browser has no GPS access.');return;}
   rec={t0:Date.now(),pts:[],dist:0,speed:0,pos:null,heading:null,ghost:$('#recGhost').checked&&!!byId(A)};
   watchId=navigator.geolocation.watchPosition(onFix,err=>{ toast(err.code===1?'Location permission was refused. Allow location for this site in your browser settings, then try again.':'Waiting for a GPS signal…'); if(err.code===1) stopRecording(false); },{enableHighAccuracy:true,maximumAge:0,timeout:20000});
-  recording=true; tc=0; setPlaying(false); $('#recBar').hidden=false; $('#pill').hidden=true; $('#nav').hidden=true; collapseSheet(); setCam('driver'); wakeLock(true); $('#recFab').classList.add('on');
+  recording=true; tc=0; setPlaying(false); $('#recBar').hidden=false; $('#pill').hidden=true; $('#nav').hidden=true; collapseSheet(); setCam('driver'); wakeLock(true); $('#recFab').classList.add('on'); refreshTrackData();
   toast('Recording. Waiting for GPS…'); };
 function onFix(p){ const c=p.coords, now=p.timestamp||Date.now(); const pt=[(now-rec.t0)/1000,c.longitude,c.latitude,c.altitude];
   if(c.accuracy>50&&rec.pts.length) return;
@@ -757,15 +764,16 @@ function onFix(p){ const c=p.coords, now=p.timestamp||Date.now(); const pt=[(now
   if(mapReady) map.getSource('rec').setData({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:rec.pts.length>1?rec.pts.map(q=>[q[1],q[2]]):[[pt[1],pt[2]],[pt[1],pt[2]]]}}); need=true; }
 $('#recStop').onclick=()=>stopRecording(true);
 function stopRecording(save){ if(watchId!=null) navigator.geolocation.clearWatch(watchId); watchId=null; recording=false; $('#recFab').classList.remove('on'); $('#recBar').hidden=true; $('#pill').hidden=false; markers.me.remove();
-  if(mapReady) map.getSource('rec').setData(emptyFC); wakeLock(false);
+  if(mapReady) map.getSource('rec').setData(emptyFC); wakeLock(false); refreshTrackData();
   if(save){ if(!rec||rec.pts.length<5){ toast('Too few GPS points were recorded, so nothing was saved.'); }
     else { const t0=rec.t0, name='Recorded · '+new Date(t0).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
       const raw={name,start:new Date(t0).toISOString(),tz:-new Date().getTimezoneOffset(),segs:[rec.pts.map(p=>[p[0],p[1],p[2],p[3]])],source:'Recorded with GPS in Track Replay'};
-      try{ const tr=addTrack(raw,byId(A)?'B':'A'); tc=0; onTracksChanged(false); showTab(byId(B)?'compare':'trip'); expandSheet(); toast(`Saved “${tr.name}”: ${km(tr.stats.dist)} km.`); }catch(e){ toast('The recording had no usable points.'); } } }
+      try{ const tr=addTrack(raw,rec.ghost&&byId(A)?'B':'solo'); tc=0; onTracksChanged(true); showTab(byId(B)?'compare':'trip'); expandSheet(); toast(`Saved “${tr.name}”: ${km(tr.stats.dist)} km.`); }catch(e){ toast('The recording had no usable points.'); } } }
   rec=null; setCam('follow'); }
 
 /* ================= misc controls ================= */
 $('#recFab').onclick=()=>{ if(recording) stopRecording(true); else $('#recStart').click(); };
+$('#clearMap').onclick=()=>{ A=null; B=null; setPlaying(false); tc=0; persist(); onTracksChanged(false); toast('Map cleared. Your tracks are still in the list.'); };
 $('#newBtn').onclick=()=>{ showTab('create'); expandSheet(); };
 let wl=null; async function wakeLock(on){ try{ if(on&&!wl&&navigator.wakeLock){ wl=await navigator.wakeLock.request('screen'); wl.addEventListener('release',()=>wl=null); } else if(!on&&wl){ await wl.release(); wl=null; } }catch(e){} }
 $('#tPlay').onclick=()=>{ if(recording) return; playing?setPlaying(false):play(dir>0||tc<=0?1:dir); };
@@ -815,7 +823,7 @@ function decodeSample(s){ const segs=s.segs.map(a=>{const o=[];let p=[0,0,0,0];f
   return {id:'mytracks-2013-12-29',name:'Luanda drive · 29 Dec 2013',start:s.start.replace(/(\.\d{3})\d*Z$/,'$1Z'),tz:60,segs,builtin:true,color:PALETTE[0],source:'Google My Tracks · KMZ'}; }
 if(window.SAMPLE_TRACK) tracks.push(build(decodeSample(window.SAMPLE_TRACK)));
 const saved=store.get('trackreplay.v2'); if(saved&&Array.isArray(saved.tracks)) saved.tracks.forEach(r=>{ try{ const t=build(r); if(t.pts.length>1) tracks.push(t); }catch(e){} });
-A=(saved&&byId(saved.A))?saved.A:(tracks[0]&&tracks[0].id); B=(saved&&byId(saved.B)&&saved.B!==A)?saved.B:null;
+A=(saved&&saved.A===null)?null:(saved&&byId(saved.A))?saved.A:(tracks[0]&&tracks[0].id); B=(saved&&byId(saved.B)&&saved.B!==A)?saved.B:null;
 initMap(); setPlaying(false); onTracksChanged(false); syncSheet();
 if(map) map.once('style.load',()=>{ fitTracks(); setTimeout(()=>{ setCam('follow'); map.easeTo({zoom:15.5,duration:800}); },900); });
 requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
