@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1f24" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Track Replay</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed map; floating cards on top (instruction banner, map buttons, speed bubble);
+   a bottom sheet on phones that becomes a left panel on wide screens. */
+:root{
+  --bg:#ffffff; --card:#ffffff; --ink:#1f2328; --muted:#5f6670; --line:#e3e6ea; --soft:#f1f3f5; --chip:#eef1f4;
+  --a:#1a73e8; --b:#ef6c00; --nav:#0b8043; --nav-ink:#ffffff; --rec:#d93025; --good:#188038; --bad:#c5221f;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 4px 16px rgba(0,0,0,.10);
+  --f-ui:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-num:"Figtree",system-ui,sans-serif;
+  --f-mono:"Roboto Mono",ui-monospace,Menlo,monospace;
+  --sheet-h:180px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1b1f24; --card:#23282f; --ink:#e8eaed; --muted:#9aa0a6; --line:#343a42; --soft:#2b3139; --chip:#2f353d;
+  --a:#5e9bff; --b:#ff9640; --nav:#137a3e; --rec:#f2564b; --good:#5bb974; --bad:#f28b82;
+  --shadow:0 1px 3px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.4); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#1b1f24; --card:#23282f; --ink:#e8eaed; --muted:#9aa0a6; --line:#343a42; --soft:#2b3139; --chip:#2f353d;
+  --a:#5e9bff; --b:#ff9640; --nav:#137a3e; --rec:#f2564b; --good:#5bb974; --bad:#f28b82;
+  --shadow:0 1px 3px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.4); color-scheme:dark }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+[hidden]{display:none!important}
+#map{position:fixed;inset:0}
+.maplibregl-ctrl-attrib{font-size:10px}
+.maplibregl-ctrl-bottom-right{bottom:calc(var(--sheet-h) + 4px)}
+@media (min-width:900px){.maplibregl-ctrl-bottom-right{bottom:0}}
+
+/* ---- top banner ---- */
+.top{position:fixed;z-index:5;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));display:grid;gap:8px;pointer-events:none}
+.top>*{pointer-events:auto}
+.pill{background:var(--card);border-radius:28px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;padding:0 6px 0 16px;height:50px}
+.pill .ttl{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill .ttl small{display:block;font-weight:400;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.pill .dot{width:10px;height:10px;border-radius:50%;background:var(--a);flex:none}
+.iconbtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none}
+.iconbtn:hover{background:var(--soft)}
+.nav{background:var(--nav);color:var(--nav-ink);border-radius:14px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;padding:12px 16px;min-height:76px}
+.nav .arrow{width:44px;height:44px;flex:none}
+.nav .dist{font-weight:800;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.nav .txt{font-size:17px;font-weight:600;line-height:1.2;margin-top:3px}
+.rec{background:var(--rec);color:#fff;border-radius:14px;box-shadow:var(--shadow);padding:10px 14px;display:flex;align-items:center;gap:12px;font-weight:600}
+.rec .blink{width:12px;height:12px;border-radius:50%;background:#fff;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+.rec .stats{flex:1;font-variant-numeric:tabular-nums;font-size:14px}
+
+/* ---- right buttons ---- */
+.fabs{position:fixed;z-index:4;right:max(12px,env(safe-area-inset-right));bottom:calc(var(--sheet-h) + 16px);display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.fab{width:48px;height:48px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);display:grid;place-items:center;position:relative}
+.fab.on{color:var(--a)}
+.fab.recenter{width:auto;padding:0 18px 0 14px;border-radius:24px;gap:6px;display:flex;align-items:center;font-weight:600;color:var(--a)}
+.fab svg{width:24px;height:24px}
+.layers{position:absolute;right:58px;bottom:0;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:10px;display:grid;grid-template-columns:repeat(2,84px);gap:8px}
+.layers button{border-radius:10px;padding:8px 6px;font-size:13px;font-weight:600;border:2px solid transparent;background:var(--soft);display:grid;gap:4px;justify-items:center}
+.layers button i{display:block;width:56px;height:36px;border-radius:7px}
+.layers button[aria-pressed="true"]{border-color:var(--a);color:var(--a)}
+
+/* ---- speed bubbles ---- */
+.speeds{position:fixed;z-index:4;left:max(12px,env(safe-area-inset-left));bottom:calc(var(--sheet-h) + 16px);display:flex;gap:8px;align-items:flex-end}
+.bubble{width:72px;height:72px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);display:grid;place-content:center;text-align:center;border:4px solid var(--a)}
+.bubble.b{border-color:var(--b);width:60px;height:60px}
+.bubble .n{font-weight:800;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.bubble.b .n{font-size:21px}
+.bubble .u{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.gapchip{background:var(--card);box-shadow:var(--shadow);border-radius:18px;padding:7px 12px;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;margin-bottom:8px}
+
+/* ---- sheet ---- */
+.sheet{position:fixed;z-index:6;left:0;right:0;bottom:0;background:var(--card);border-radius:18px 18px 0 0;box-shadow:0 -2px 18px rgba(0,0,0,.16);display:flex;flex-direction:column;max-height:calc(100% - 80px - env(safe-area-inset-top));padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.handle{display:grid;place-items:center;height:22px;flex:none;touch-action:none;cursor:grab}
+.handle i{width:40px;height:5px;border-radius:3px;background:var(--line)}
+.peek{padding:0 16px 10px;display:grid;gap:8px;flex:none}
+.eta{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.eta .big{font-weight:800;font-size:24px;color:var(--good);font-variant-numeric:tabular-nums}
+.eta .rest{color:var(--muted);font-size:15px;font-variant-numeric:tabular-nums}
+.eta .more{margin-left:auto;font-size:13px;font-weight:600;color:var(--a);padding:6px 10px;border-radius:16px;background:var(--chip)}
+.transport{display:flex;align-items:center;gap:6px}
+.tbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--soft)}
+.tbtn svg{width:22px;height:22px}
+.tbtn.play{width:52px;height:52px;background:var(--a);color:#fff}
+.tbtn.on{background:var(--a);color:#fff}
+.rate{height:40px;border-radius:20px;border:0;background:var(--soft);padding:0 12px;font-weight:600;margin-left:auto}
+.scrub{display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.scrub input{flex:1;min-width:0;accent-color:var(--a);height:28px}
+.full{overflow:auto;flex:1;min-height:0;border-top:1px solid var(--line);padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.sheet:not(.open) .full{display:none}
+.sheet:not(.open) .peek{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.tabs{display:flex;gap:6px;padding:12px 16px 4px;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;background:var(--card);z-index:1}
+.tabs button{flex:none;padding:7px 14px;border-radius:18px;border:1px solid var(--line);font-weight:600;font-size:14px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--a);border-color:var(--a);color:#fff}
+.panel{padding:12px 16px}
+.panel h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;font-weight:700}
+.panel h3:first-child{margin-top:4px}
+.panel p{margin:0 0 10px;color:var(--muted);font-size:14px;line-height:1.45}
+@media (min-width:900px){
+  .sheet{left:max(12px,env(safe-area-inset-left));top:calc(72px + env(safe-area-inset-top));bottom:12px;right:auto;width:400px;border-radius:16px;max-height:none;box-shadow:var(--shadow)}
+  .handle{display:none}
+  .sheet .full{display:block!important}
+  .sheet .peek{padding-top:14px;padding-bottom:12px}
+  .top{left:max(12px,env(safe-area-inset-left));right:auto;width:400px}
+  .speeds{left:428px;bottom:16px}
+  .fabs{bottom:36px}
+}
+
+/* ---- panel content ---- */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--soft);border-radius:12px;padding:10px}
+.stat .k{font-size:11.5px;color:var(--muted);font-weight:600}
+.stat .v{font-weight:700;font-size:18px;font-variant-numeric:tabular-nums;margin-top:2px}
+.stat .v small{font-size:12px;color:var(--muted);font-weight:500;margin-left:2px}
+.chart{position:relative;height:150px;margin-top:12px;background:var(--soft);border-radius:12px}
+.chart canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.btn{border-radius:22px;padding:10px 18px;font-weight:700;font-size:14px;background:var(--a);color:#fff;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+.btn.ghost{background:var(--chip);color:var(--a)}
+.btn.red{background:var(--rec)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tlist{display:grid;gap:8px}
+.trk{border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;align-items:center}
+.trk .sw{width:12px;height:12px;border-radius:50%}
+.trk .nm{font-weight:700;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trk .meta{grid-column:2;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.trk .note{grid-column:2;font-size:12px;color:var(--bad)}
+.trk .acts{grid-column:1/3;display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.chipbtn{border-radius:16px;padding:5px 11px;font-size:13px;font-weight:600;background:var(--chip);color:var(--ink)}
+.chipbtn.onA{background:var(--a);color:#fff}
+.chipbtn.onB{background:var(--b);color:#fff}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:14px;display:grid;gap:8px;justify-items:center;text-align:center;color:var(--muted);font-size:14px;margin-bottom:12px}
+.drop.over{border-color:var(--a)}
+.kpi{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+.kpi th,.kpi td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.kpi th:first-child,.kpi td:first-child{text-align:left;color:var(--muted);font-weight:500}
+.kpi thead th{font-weight:800}
+.kpi thead .A{color:var(--a)} .kpi thead .B{color:var(--b)}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.verdict{background:var(--soft);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.verdict b{font-size:19px;display:block}
+.warn{color:var(--bad);font-size:13px}
+.splits{display:grid;gap:4px;font-size:13px;font-variant-numeric:tabular-nums}
+.split{display:grid;grid-template-columns:40px 50px 50px 1fr 56px;gap:6px;align-items:center}
+.split.head{color:var(--muted);font-size:11.5px;font-weight:600}
+.split .bar{height:8px;position:relative}
+.split .bar i{position:absolute;top:0;height:8px;border-radius:3px}
+.split .bar::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.split .d{text-align:right}
+.field{display:grid;gap:5px;margin-bottom:14px}
+.field label{font-size:14px;font-weight:600;display:flex;justify-content:space-between}
+.field label output{font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field input[type=range]{accent-color:var(--a);width:100%}
+.field input[type=number],.field input[type=text],.field select{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--card);width:100%}
+.help{font-size:12.5px;color:var(--muted)}
+.check{display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:12px}
+.check input{width:18px;height:18px;accent-color:var(--a)}
+.estimate{background:var(--soft);border-radius:12px;padding:12px;margin-bottom:12px}
+.estimate .big{font-weight:800;font-size:28px;font-variant-numeric:tabular-nums}
+.estimate .sm{font-size:13px;color:var(--muted)}
+.card2{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.card2 h4{margin:0 0 4px;font-size:15.5px}
+.seg{display:inline-flex;background:var(--soft);border-radius:18px;padding:3px;gap:2px;margin-bottom:10px}
+.seg button{padding:6px 12px;border-radius:15px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.foot{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.5}
+.toast{position:fixed;z-index:20;left:50%;transform:translateX(-50%);top:calc(74px + env(safe-area-inset-top));background:#323232;color:#fff;padding:11px 16px;border-radius:10px;font-size:14px;box-shadow:var(--shadow);max-width:min(520px,calc(100% - 32px))}
+/* markers */
+.car{width:40px;height:40px;display:grid;place-items:center;pointer-events:none}
+.car svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.wp{width:26px;height:26px;border-radius:50%;background:var(--a);color:#fff;border:3px solid #fff;display:grid;place-items:center;font-size:12px;font-weight:800;box-shadow:var(--shadow);cursor:grab}
+.me{width:18px;height:18px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 8px rgba(26,115,232,.2)}
+.drawhint{display:flex;align-items:center;gap:8px;position:fixed;z-index:7;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));min-height:50px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:9px 14px;font-size:14px;font-weight:600}
+#drawHint{flex:1;min-width:0}
+@media (min-width:900px){.drawhint{right:auto;width:400px}}
+body.drawing .top{display:none}
+@media (prefers-reduced-motion: reduce){.rec .blink{animation:none}}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Map"></div>
+
+<div class="top">
+  <div class="nav" id="nav" hidden>
+    <svg class="arrow" id="navArrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 L36 22 H28 V42 H20 V22 H12 Z" fill="currentColor"/></svg>
+    <div><div class="dist" id="navDist"></div><div class="txt" id="navTxt"></div></div>
+  </div>
+  <div class="rec" id="recBar" hidden><span class="blink"></span><span class="stats" id="recStats">Recording</span><button class="btn" style="background:#fff;color:var(--rec)" id="recStop">Stop</button></div>
+  <div class="pill" id="pill">
+    <span class="dot" id="pillDot"></span>
+    <button class="ttl" id="pillTitle" style="text-align:left">Track Replay<small>Tap to choose a track</small></button>
+    <button class="iconbtn" id="themeBtn" title="Switch light/dark" aria-label="Switch light or dark theme"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+  </div>
+</div>
+<div class="drawhint" id="drawBar" hidden><span id="drawHint">Tap the map to add stops</span><button class="chipbtn" id="drawUndo2">Undo</button><button class="chipbtn onA" id="drawSave2" disabled>Save</button><button class="chipbtn" id="drawCancel2" aria-label="Cancel drawing">✕</button></div>
+
+<div class="speeds" id="speeds">
+  <div class="bubble" id="bubA"><span class="n" id="spdA">0</span><span class="u">KM/H</span></div>
+  <div class="bubble b" id="bubB" hidden><span class="n" id="spdB">0</span><span class="u">KM/H</span></div>
+  <div class="gapchip" id="gapChip" hidden></div>
+</div>
+
+<div class="fabs">
+  <div style="position:relative">
+    <div class="layers" id="layersMenu" hidden>
+      <button data-style="streets"><i style="background:linear-gradient(135deg,#f2efe9 40%,#fbd38d 41% 47%,#f2efe9 48% 70%,#aad3df 71%)"></i>Streets</button>
+      <button data-style="light"><i style="background:linear-gradient(135deg,#fafafa 40%,#ddd 41% 47%,#fafafa 48% 70%,#d4dadc 71%)"></i>Light</button>
+      <button data-style="satellite"><i style="background:linear-gradient(135deg,#4b5d3a,#2f3b2a 50%,#6a6f5a)"></i>Satellite</button>
+      <button data-style="dark"><i style="background:linear-gradient(135deg,#2b2f36 40%,#555 41% 47%,#2b2f36 48% 70%,#1d2733 71%)"></i>Dark</button>
+    </div>
+    <button class="fab" id="layersBtn" title="Map type" aria-label="Map type"><svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5zm-8.4 9.2L12 16.4l8.4-4.2L22 13l-10 5-10-5 1.6-.8zm0 4L12 20.4l8.4-4.2L22 17l-10 5-10-5 1.6-.8z" fill="currentColor"/></svg></button>
+  </div>
+  <button class="fab" id="compassBtn" title="North up" aria-label="Reset to north up"><svg viewBox="0 0 24 24" id="compassSvg"><path d="M12 2l4 10h-8z" fill="#d93025"/><path d="M12 22l-4-10h8z" fill="currentColor" opacity=".55"/></svg></button>
+  <button class="fab" id="tiltBtn" title="3D / 2D" aria-label="Toggle 3D tilt" style="font-weight:800;font-size:14px">3D</button>
+  <button class="fab" id="locBtn" title="Show my location" aria-label="Show my location"><svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9 3h-2.1A7 7 0 0 0 13 5.1V3h-2v2.1A7 7 0 0 0 5.1 11H3v2h2.1a7 7 0 0 0 5.9 5.9V21h2v-2.1a7 7 0 0 0 5.9-5.9H21v-2zm-9 6a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" fill="currentColor"/></svg></button>
+  <button class="fab recenter" id="camBtn" title="Camera mode"><svg viewBox="0 0 24 24"><path d="M12 2 4.5 20.3l.7.7L12 18l6.8 3 .7-.7z" fill="currentColor"/></svg><span id="camLbl">Driver view</span></button>
+</div>
+
+<section class="sheet" id="sheet" aria-label="Controls">
+  <div class="handle" id="handle" role="button" aria-label="Expand or collapse panel" tabindex="0"><i></i></div>
+  <div class="peek">
+    <div class="eta"><span class="big" id="etaBig">0 min</span><span class="rest" id="etaRest"></span><button class="more" id="moreBtn">More</button></div>
+    <div class="transport">
+      <button class="tbtn" id="tStart" aria-label="Jump to start"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" fill="currentColor"/></svg></button>
+      <button class="tbtn" id="tBack" aria-label="Play backwards"><svg viewBox="0 0 24 24"><path d="M18 5v14L7 12z" fill="currentColor"/></svg></button>
+      <button class="tbtn play" id="tPlay" aria-label="Play"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 5v14l11-7z" fill="currentColor"/></svg></button>
+      <button class="tbtn" id="tEnd" aria-label="Jump to end"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" fill="currentColor"/></svg></button>
+      <select class="rate" id="rate" aria-label="Playback speed">
+        <option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10" selected>10×</option>
+        <option value="20">20×</option><option value="50">50×</option><option value="100">100×</option>
+      </select>
+    </div>
+    <div class="scrub"><span id="tNow">0:00</span><input id="scrub" type="range" min="0" max="1" step="any" value="0" aria-label="Position in replay"><span id="tDur">0:00</span></div>
+  </div>
+  <div class="full">
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="trip" aria-selected="true">Trip</button>
+      <button role="tab" data-tab="tracks" aria-selected="false">Tracks</button>
+      <button role="tab" data-tab="compare" aria-selected="false">Compare</button>
+      <button role="tab" data-tab="create" aria-selected="false">Create</button>
+      <button role="tab" data-tab="redo" aria-selected="false">Redo</button>
+    </div>
+    <div class="panel" id="panel-trip"></div>
+    <div class="panel" id="panel-tracks" hidden>
+      <div class="drop" id="drop">Drop KMZ, KML or GPX files here
+        <label class="btn" for="file" tabindex="0">Import files</label>
+        <input id="file" type="file" accept=".kmz,.kml,.gpx" multiple hidden>
+      </div>
+      <div class="tlist" id="tlist"></div>
+      <p class="foot">Set one track as <b style="color:var(--a)">A</b> (the reference) and another as <b style="color:var(--b)">B</b> to race them. Tracks are saved in this browser on this device. Use GPX to move one to another device or app.</p>
+    </div>
+    <div class="panel" id="panel-compare" hidden></div>
+    <div class="panel" id="panel-create" hidden>
+      <div class="card2">
+        <h4>Record with GPS</h4>
+        <p>Drive with your phone and record a new track. Keep this page open and the screen on.</p>
+        <label class="check"><input id="recGhost" type="checkbox" checked> Race against track A as a ghost</label>
+        <button class="btn red" id="recStart">● Start recording</button>
+      </div>
+      <div class="card2">
+        <h4>Draw a route</h4>
+        <p>Tap the map to add a start, stops and a finish. The route follows real roads.</p>
+        <label class="check"><input id="drawRoads" type="checkbox" checked> Follow roads</label>
+        <div class="row" id="drawIdle"><button class="btn" id="drawStart">Start drawing</button></div>
+        <div id="drawActive" hidden>
+          <div class="estimate" id="drawInfo"><span class="sm">Tap the map to add your first point.</span></div>
+          <div class="field"><label for="drawName">Name</label><input id="drawName" type="text" maxlength="60"></div>
+          <div class="row"><button class="btn" id="drawSave" disabled>Save track</button><button class="btn ghost" id="drawUndo">Undo</button><button class="btn ghost" id="drawCancel">Cancel</button></div>
+        </div>
+      </div>
+      <div class="card2">
+        <h4>Reverse a route</h4>
+        <p>Make a track that goes the other way, from finish back to start.</p>
+        <div class="field"><label for="revSrc">Track</label><select id="revSrc"></select></div>
+        <div class="seg" role="group" aria-label="Reverse mode"><button data-rev="exact" aria-pressed="true">Same path</button><button data-rev="roads" aria-pressed="false">Re-route on roads</button></div>
+        <p class="help" id="revHelp">Same path: the line and the speed you drove at each point are kept, played back the other way.</p>
+        <button class="btn" id="revGo">Create reversed track</button>
+      </div>
+    </div>
+    <div class="panel" id="panel-redo" hidden>
+      <h3>Plan a redo</h3>
+      <p>Make a virtual rerun of track A with different driving, then race it against the original. The route stays the same and only the timing changes.</p>
+      <div class="field"><label for="rk">Pace vs original <output id="rkOut">110%</output></label><input id="rk" type="range" min="60" max="150" step="1" value="110"><span class="help">Scales the speed you drove at every point.</span></div>
+      <div class="field"><label for="rcap">Speed limit <output id="rcapOut"></output></label><input id="rcap" type="number" min="0" max="250" step="5" value="90" inputmode="numeric"><span class="help">Never faster than this. Set 0 for no limit.</span></div>
+      <label class="check"><input id="rskip" type="checkbox" checked> Skip stops (lights, traffic)</label>
+      <div class="estimate" id="estimate"></div>
+      <button class="btn" id="rgo">Create redo and race it</button>
+    </div>
+  </div>
+</section>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="sample.js"></script>
+<script>
+'use strict';
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const D2R=Math.PI/180;
+function hav(lon1,lat1,lon2,lat2){const a=lat1*D2R,b=lat2*D2R,h=Math.sin((b-a)/2)**2+Math.cos(a)*Math.cos(b)*Math.sin((lon2-lon1)*D2R/2)**2;return 2*6371008.8*Math.asin(Math.sqrt(h));}
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+function fmtDur(s,signed){ if(!isFinite(s)) return '—'; const sg=s<0?'−':(signed?'+':''); s=Math.abs(Math.round(s));
+  const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60; return sg+(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0'); }
+function fmtMin(s){ s=Math.max(0,s); if(s<60) return Math.round(s)+' s'; const m=Math.round(s/60); return m<60? m+' min' : Math.floor(m/60)+' h '+(m%60)+' min'; }
+const km=m=>(m/1000).toFixed(m<10000?2:1);
+const kmh=ms=>(ms*3.6).toFixed(1);
+const fmtDist=m=>m<1000? Math.round(m/10)*10+' m' : (m/1000).toFixed(m<10000?1:0)+' km';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let toastT; function toast(m,ms=4200){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms);}
+const tok={}; function readTokens(){const cs=getComputedStyle(document.documentElement);['--a','--b','--ink','--muted','--line','--soft','--card','--good','--bad','--rec'].forEach(k=>tok[k]=cs.getPropertyValue(k).trim());}
+readTokens();
+const RAMP=[[0,[59,111,182]],[.3,[42,163,154]],[.55,[227,178,52]],[.78,[224,112,42]],[1,[201,48,44]]], VMAX=130/3.6;
+function rampColor(v){const x=Math.max(0,Math.min(1,v/VMAX));for(let i=1;i<RAMP.length;i++){if(x<=RAMP[i][0]){const[a,ca]=RAMP[i-1],[b,cb]=RAMP[i],f=(x-a)/(b-a);return `rgb(${ca.map((c,j)=>Math.round(c+(cb[j]-c)*f)).join(',')})`;}}return 'rgb(201,48,44)';}
+function timeStep(t){return [1,2,5,10,15,30,60,120,300,600,900,1800,3600,7200].find(s=>s>=t)||7200;}
+
+/* ================= track model ================= */
+let tracks=[],A=null,B=null; const byId=id=>tracks.find(t=>t.id===id);
+function build(raw){
+  const pts=[]; let d=0;
+  raw.segs.forEach((s,si)=>{ let last=null;
+    for(const p of s){ const [t,lon,lat,alt]=p; if(!isFinite(t)||!isFinite(lon)||!isFinite(lat)) continue;
+      if(last){ const dt=t-last.t; if(dt<0.5) continue; const dd=hav(last.lon,last.lat,lon,lat);
+        if(dd/dt>70) continue;
+        if(dd<2){ pts.push(last={...last,t,alt:alt??last.alt}); continue; }
+        d+=dd; }
+      pts.push(last={t,lon,lat,alt:(alt==null||!isFinite(alt))?null:alt,d,seg:si}); } });
+  for(let i=0,j=0,k=0;i<pts.length;i++){ const p=pts[i]; while(pts[j].seg!==p.seg) j++; while(j<i&&pts[j+1].t<=p.t-4) j++;
+    if(k<i) k=i; while(k+1<pts.length&&pts[k].t<p.t+4&&pts[k+1].seg===p.seg) k++; const dt=pts[k].t-pts[j].t; p.v=dt>=3?(pts[k].d-pts[j].d)/dt:(i?pts[i-1].v:0); }
+  const vr=pts.map(p=>p.v); for(let i=0;i<pts.length;i++){const w=[];for(let j=Math.max(0,i-4);j<=Math.min(pts.length-1,i+4);j++) if(pts[j].seg===pts[i].seg) w.push(vr[j]); w.sort((x,y)=>x-y); pts[i].v=w[w.length>>1];}
+  let moving=0,stops=0,still=0,fast=0,gain=0,maxV=0,minAlt=Infinity,maxAlt=-Infinity;
+  for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i]; if(a.seg!==b.seg) continue; const dt=b.t-a.t,v=(b.d-a.d)/dt;
+    if(v>0.6){moving+=dt;if(still>=10)stops++;still=0;}else still+=dt; if(b.v>=80/3.6) fast+=dt;}
+  pts.forEach(p=>{if(p.v>maxV)maxV=p.v;});
+  let prev=null; for(let i=0;i<pts.length;i++){let s=0,n=0;for(let j=Math.max(0,i-6);j<=Math.min(pts.length-1,i+6);j++) if(pts[j].alt!=null){s+=pts[j].alt;n++;}
+    if(!n) continue; const m=s/n; pts[i].altS=m; minAlt=Math.min(minAlt,m); maxAlt=Math.max(maxAlt,m); if(prev!=null&&m>prev) gain+=m-prev; prev=m;}
+  const elapsed=pts.length?pts[pts.length-1].t-pts[0].t:0, hasAlt=isFinite(minAlt);
+  let w=180,e=-180,s=90,n=-90; pts.forEach(p=>{w=Math.min(w,p.lon);e=Math.max(e,p.lon);s=Math.min(s,p.lat);n=Math.max(n,p.lat);});
+  const tr={...raw,pts,bounds:[[w,s],[e,n]],stats:{elapsed,moving,stopped:elapsed-moving,stops,dist:d,avg:elapsed?d/elapsed:0,avgMoving:moving?d/moving:0,maxV,gain:hasAlt?gain:null,minAlt:hasAlt?minAlt:null,maxAlt:hasAlt?maxAlt:null,fast}};
+  if(raw.steps) tr.navSteps=raw.steps.map(st=>({...st,d:nearestDist(tr,st.lon,st.lat)})).sort((a,b)=>a.d-b.d);
+  return tr;
+}
+function nearestDist(tr,lon,lat){let best=Infinity,bd=0;for(const p of tr.pts){const q=hav(lon,lat,p.lon,p.lat);if(q<best){best=q;bd=p.d;}}return bd;}
+function idxAt(tr,t){const p=tr.pts;let lo=0,hi=p.length-1;if(t<=p[0].t)return 0;if(t>=p[hi].t)return hi;while(hi-lo>1){const m=(lo+hi)>>1;if(p[m].t<=t)lo=m;else hi=m;}return lo;}
+function stateAt(tr,t){ t+=tr.pts[0].t; const p=tr.pts,i=idxAt(tr,t),a=p[i],b=p[Math.min(i+1,p.length-1)];
+  if(a===b||a.seg!==b.seg||t<=a.t) return {lon:a.lon,lat:a.lat,d:a.d,v:t>=p[p.length-1].t?0:a.v,alt:a.altS,i};
+  const f=(t-a.t)/(b.t-a.t); return {lon:a.lon+(b.lon-a.lon)*f,lat:a.lat+(b.lat-a.lat)*f,d:a.d+(b.d-a.d)*f,v:a.v+(b.v-a.v)*f,alt:a.altS==null?null:a.altS+((b.altS??a.altS)-a.altS)*f,i}; }
+function timeAtDist(tr,d){const p=tr.pts;if(d<=0)return 0;if(d>p[p.length-1].d)return NaN;let lo=0,hi=p.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(p[m].d<d)lo=m;else hi=m;}
+  const a=p[lo],b=p[hi];if(b.d===a.d)return b.t-p[0].t;return a.t+(b.t-a.t)*(d-a.d)/(b.d-a.d)-p[0].t;}
+function bearing(lon1,lat1,lon2,lat2){const y=Math.sin((lon2-lon1)*D2R)*Math.cos(lat2*D2R),x=Math.cos(lat1*D2R)*Math.sin(lat2*D2R)-Math.sin(lat1*D2R)*Math.cos(lat2*D2R)*Math.cos((lon2-lon1)*D2R);return (Math.atan2(y,x)/D2R+360)%360;}
+function headingAt(tr,t){const a=stateAt(tr,t-5),b=stateAt(tr,t+5);if(hav(a.lon,a.lat,b.lon,b.lat)<3)return null;return bearing(a.lon,a.lat,b.lon,b.lat);}
+
+/* ================= parsing / export ================= */
+function finalize(name,segsAbs,source){
+  let segs=segsAbs.map(s=>s.filter(p=>isFinite(p[1])&&isFinite(p[2]))).filter(s=>s.length>1), synthetic=false;
+  if(!segs.length) throw new Error('empty');
+  if(segs.some(s=>s.some(p=>!isFinite(p[0])))){ synthetic=true; let t=0; segs=segs.map(s=>s.map((p,i)=>{ t+= i? hav(s[i-1][1],s[i-1][2],p[1],p[2])/11.11 : 1; return [t*1000,p[1],p[2],p[3]]; })); }
+  const t0=Math.min(...segs.map(s=>Math.min(...s.map(p=>p[0]))));
+  segs=segs.map(s=>s.map(p=>[(p[0]-t0)/1000,p[1],p[2],p[3]]).sort((a,b)=>a[0]-b[0]));
+  return {name,start:synthetic?null:new Date(t0).toISOString(),tz:null,segs,source,synthetic,note:synthetic?'No timestamps in this file, so it is timed at a steady 40 km/h.':null};
+}
+function parseKML(text,fname){ const doc=new DOMParser().parseFromString(text,'application/xml'); if(doc.getElementsByTagName('parsererror').length) throw new Error('bad');
+  const nm=doc.getElementsByTagNameNS('*','name')[0]; const name=(nm&&nm.textContent.trim())||fname.replace(/\.\w+$/,''); const segs=[];
+  for(const tr of doc.getElementsByTagNameNS('*','Track')){ const w=[...tr.getElementsByTagNameNS('*','when')].map(e=>Date.parse(e.textContent.trim()));
+    const c=[...tr.getElementsByTagNameNS('*','coord')].map(e=>e.textContent.trim().split(/\s+/).map(Number)); const n=Math.min(w.length,c.length),s=[]; for(let i=0;i<n;i++) s.push([w[i],c[i][0],c[i][1],c[i][2]]); segs.push(s); }
+  if(!segs.some(s=>s.length>1)) for(const ls of doc.getElementsByTagNameNS('*','LineString')){ const ce=ls.getElementsByTagNameNS('*','coordinates')[0]; if(!ce) continue;
+    segs.push(ce.textContent.trim().split(/\s+/).map(q=>{const v=q.split(',').map(Number);return [NaN,v[0],v[1],v[2]];})); }
+  const au=(doc.getElementsByTagNameNS('*','author')[0]?.textContent||'').trim(); return finalize(name,segs,au?au.replace(/^Created by /,''):'KML file'); }
+function parseGPX(text,fname){ const doc=new DOMParser().parseFromString(text,'application/xml'); if(doc.getElementsByTagName('parsererror').length) throw new Error('bad');
+  const nm=doc.querySelector('trk > name, metadata > name, rte > name'); const name=(nm&&nm.textContent.trim())||fname.replace(/\.\w+$/,''); const segs=[];
+  const pt=e=>{const t=e.getElementsByTagName('time')[0],el=e.getElementsByTagName('ele')[0];return [t?Date.parse(t.textContent.trim()):NaN,+e.getAttribute('lon'),+e.getAttribute('lat'),el?+el.textContent:null];};
+  for(const s of doc.getElementsByTagName('trkseg')) segs.push([...s.getElementsByTagName('trkpt')].map(pt));
+  if(!segs.some(s=>s.length>1)) for(const r of doc.getElementsByTagName('rte')) segs.push([...r.getElementsByTagName('rtept')].map(pt));
+  const cr=doc.documentElement.getAttribute('creator'); return finalize(name,segs,cr?'GPX · '+cr:'GPX file'); }
+async function parseFile(f){ const n=f.name.toLowerCase();
+  if(n.endsWith('.gpx')) return parseGPX(await f.text(),f.name);
+  if(n.endsWith('.kml')) return parseKML(await f.text(),f.name);
+  if(n.endsWith('.kmz')){ if(!window.JSZip) throw new Error('nozip'); const z=await JSZip.loadAsync(f); const e=z.file('doc.kml')||z.file(/\.kml$/i)[0]; if(!e) throw new Error('bad'); return parseKML(await e.async('string'),f.name); }
+  throw new Error('type'); }
+function toGPX(tr){ const t0=tr.start?Date.parse(tr.start):Date.UTC(2000,0,1);
+  const segs=tr.segs.map(s=>'  <trkseg>\n'+s.map(p=>`   <trkpt lat="${p[2].toFixed(6)}" lon="${p[1].toFixed(6)}">${p[3]!=null?`<ele>${(+p[3]).toFixed(1)}</ele>`:''}<time>${new Date(t0+p[0]*1000).toISOString()}</time></trkpt>`).join('\n')+'\n  </trkseg>').join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Track Replay" xmlns="http://www.topografix.com/GPX/1/1">\n <trk><name>${esc(tr.name)}</name>\n${segs}\n </trk>\n</gpx>\n`; }
+function downloadGPX(tr){ const blob=new Blob([toGPX(tr)],{type:'application/gpx+xml'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=(tr.name.replace(/[^\w\- ]+/g,'').trim()||'track')+'.gpx'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000); }
+
+const PALETTE=['#1a73e8','#ef6c00','#188038','#9334e6','#d01884','#12858f','#b06000'];
+function nextColor(){const u=new Set(tracks.map(t=>t.color));return PALETTE.find(c=>!u.has(c))||PALETTE[tracks.length%PALETTE.length];}
+function newId(p){return p+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function addTrack(raw,role){ raw.id=raw.id||newId('trk'); raw.color=raw.color||nextColor(); const tr=build(raw); if(tr.pts.length<2) throw new Error('empty');
+  tracks.push(tr); if(role==='solo'){ A=tr.id; B=null; } else if(role==='A'){ if(B===null&&A) B=A; A=tr.id; } else if(role==='B'||(A&&!B)) { if(A!==tr.id) B=tr.id; } else if(!A) A=tr.id; persist(); return tr; }
+function persist(){ const out=tracks.filter(t=>!t.builtin).map(t=>({id:t.id,name:t.name,start:t.start,tz:t.tz,color:t.color,source:t.source,synthetic:t.synthetic,note:t.note,steps:t.steps,
+    segs:t.segs.map(s=>s.map(p=>[Math.round(p[0]*10)/10,+(+p[1]).toFixed(6),+(+p[2]).toFixed(6),p[3]==null?null:Math.round(p[3]*10)/10]))}));
+  if(!store.set('trackreplay.v2',{tracks:out,A,B}) && out.length) toast('This browser blocked saving. New tracks will be lost when you close the page, so export them as GPX.'); }
+async function importFiles(files){ for(const f of files){ try{ const raw=await parseFile(f); const tr=addTrack(raw);
+    toast(`Imported “${tr.name}”: ${km(tr.stats.dist)} km, ${fmtDur(tr.stats.elapsed)}.`); tc=0; onTracksChanged(true); }
+  catch(e){ toast({empty:`“${f.name}” has no GPS points. It looks like a recording that stopped before the GPS got a fix.`,type:`“${f.name}” isn't a KMZ, KML or GPX file.`,nozip:`Couldn't unzip “${f.name}”. Unzip it and import the doc.kml inside.`}[e.message]||`Couldn't read “${f.name}”. Check that it's a valid KMZ, KML or GPX file.`); } } }
+
+/* ================= routing (OSRM) ================= */
+const OSRM='https://router.project-osrm.org/route/v1/driving/';
+async function osrmRoute(coords){
+  const url=OSRM+coords.map(c=>c[0].toFixed(6)+','+c[1].toFixed(6)).join(';')+'?overview=full&geometries=geojson&steps=true&annotations=duration';
+  const r=await fetch(url); if(!r.ok) throw new Error('route'); const j=await r.json(); if(j.code!=='Ok'||!j.routes||!j.routes.length) throw new Error('route');
+  const rt=j.routes[0], g=rt.geometry.coordinates;
+  let durs=[]; rt.legs.forEach(l=>{ if(l.annotation&&l.annotation.duration) durs=durs.concat(l.annotation.duration); });
+  const segD=[]; let tot=0; for(let i=1;i<g.length;i++){ const d=hav(g[i-1][0],g[i-1][1],g[i][0],g[i][1]); segD.push(d); tot+=d; }
+  if(durs.length!==g.length-1) durs=segD.map(d=>rt.duration*d/Math.max(tot,1));
+  let t=0; const seg=[[0,g[0][0],g[0][1],null]]; for(let i=1;i<g.length;i++){ t+=Math.max(durs[i-1],0.05); seg.push([t,g[i][0],g[i][1],null]); }
+  const steps=[]; rt.legs.forEach((l,li)=>l.steps.forEach(s=>{ const m=s.maneuver; if(m.type==='arrive'&&li<rt.legs.length-1) return;
+    steps.push({lon:m.location[0],lat:m.location[1],type:m.type,mod:m.modifier||'',exit:m.exit||null,name:s.name||s.ref||''}); }));
+  return {segs:[seg],steps,distance:rt.distance,duration:rt.duration};
+}
+function straightRoute(coords){ let t=0; const seg=[[0,coords[0][0],coords[0][1],null]];
+  for(let i=1;i<coords.length;i++){ const a=coords[i-1],b=coords[i],d=hav(a[0],a[1],b[0],b[1]),n=Math.max(1,Math.ceil(d/25));
+    for(let k=1;k<=n;k++){ t+=d/n/13.9; seg.push([t,a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n,null]); } }
+  return {segs:[seg],steps:null,distance:null,duration:t}; }
+function stepText(s){ const on=s.name?` onto ${s.name}`:'', m=s.mod;
+  switch(s.type){ case 'depart': return `Head out${s.name?' on '+s.name:''}`; case 'arrive': return 'Arrive at your destination';
+    case 'roundabout': case 'rotary': return `At the roundabout, take exit ${s.exit||''}${on}`.replace('  ',' ');
+    case 'fork': case 'merge': case 'on ramp': case 'off ramp': return `Keep ${m.includes('left')?'left':m.includes('right')?'right':'straight'}${on}`;
+    case 'end of road': return `At the end of the road, turn ${m.includes('left')?'left':'right'}${on}`;
+    case 'continue': case 'new name': return `Continue${on||' straight'}`;
+    default: return m==='straight'?`Continue straight${on}`: m==='uturn'?`Make a U-turn${on}`: `Turn ${m}${on}`; } }
+const MOD_ANGLE={uturn:180,'sharp right':135,right:90,'slight right':45,straight:0,'slight left':-45,left:-90,'sharp left':-135};
+
+/* ================= map ================= */
+const rasterStyle=(tiles,attr,max=19)=>({version:8,sources:{base:{type:'raster',tiles:[tiles],tileSize:256,attribution:attr,maxzoom:max}},layers:[{id:'base',type:'raster',source:'base'}]});
+const STYLES={
+  streets:'https://tiles.openfreemap.org/styles/liberty',
+  light:'https://tiles.openfreemap.org/styles/positron',
+  satellite:rasterStyle('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','Imagery © Esri, Maxar, Earthstar Geographics',19),
+  dark:rasterStyle('https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png','© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © CARTO',20),
+  osm:rasterStyle('https://tile.openstreetmap.org/{z}/{x}/{y}.png','© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',19)
+};
+let styleName=store.get('trackreplay.style')||'streets', map=null, mapReady=false;
+const markers={};
+function initMap(){
+  if(!window.maplibregl){ $('#map').innerHTML='<div style="display:grid;place-items:center;height:100%;padding:24px;text-align:center;color:var(--muted)">The map library didn’t load. Check your connection and reload the page.</div>'; return; }
+  map=new maplibregl.Map({container:'map',style:STYLES[styleName],center:[13.24,-8.92],zoom:12,attributionControl:{compact:true},maxPitch:70,dragRotate:true,pitchWithRotate:true});
+  map.touchZoomRotate.enableRotation();
+  let loaded=false; const fallback=setTimeout(()=>{ if(!loaded&&styleName!=='osm'){ toast('Street map style didn’t load, switching to OpenStreetMap.'); setStyle('osm'); } },9000);
+  map.on('style.load',()=>{ loaded=true; clearTimeout(fallback); addLayers(); mapReady=true; refreshTrackData(); need=true; });
+  map.on('error',e=>{ if(!loaded&&e&&e.error&&/style|Failed to fetch|NetworkError/i.test(String(e.error.message||e.error))&&styleName!=='osm'){ clearTimeout(fallback); setStyle('osm'); } });
+  map.on('dragstart',e=>{ if(e.originalEvent&&!recording) setCam('free'); });
+  map.on('rotate',()=>{ $('#compassSvg').style.transform=`rotate(${-map.getBearing()}deg)`; });
+  map.on('click',onMapClick);
+  map.on('pitchend',()=>$('#tiltBtn').classList.toggle('on',map.getPitch()>10));
+  ['A','B'].forEach(r=>{ const el=document.createElement('div'); el.className='car';
+    el.innerHTML=`<svg width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#fff"/><path d="M17 5 L26 27 L17 22 L8 27 Z" fill="var(--${r.toLowerCase()})"/></svg>`;
+    markers[r]=new maplibregl.Marker({element:el,rotationAlignment:'map',pitchAlignment:'map'}).setLngLat([0,0]); });
+  const me=document.createElement('div'); me.className='me'; markers.me=new maplibregl.Marker({element:me}).setLngLat([0,0]);
+}
+function setStyle(name){ styleName=name; store.set('trackreplay.style',name==='osm'?'streets':name); mapReady=false; map.setStyle(STYLES[name]);
+  document.querySelectorAll('[data-style]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.style===name)); }
+const emptyFC={type:'FeatureCollection',features:[]};
+function addLayers(){
+  const add=(id,src,paint,layout={},type='line')=>{ if(!map.getSource(src)) map.addSource(src,{type:'geojson',data:emptyFC,lineMetrics:true}); map.addLayer({id,type,source:src,paint,layout}); };
+  const round={'line-join':'round','line-cap':'round'};
+  for(const r of ['B','A']){
+    add(r+'-casing',r,{'line-color':'#ffffff','line-width':['interpolate',['linear'],['zoom'],10,5,16,12],'line-opacity':.95},round);
+    add(r+'-line',r,{'line-color':tok['--'+r.toLowerCase()],'line-width':['interpolate',['linear'],['zoom'],10,3,16,8]},round);
+    add(r+'-passed',r+'p',{'line-color':'#7d8590','line-width':['interpolate',['linear'],['zoom'],10,3,16,8],'line-opacity':.8},round);
+    add(r+'-ends',r+'e',{'circle-radius':6,'circle-color':['get','c'],'circle-stroke-color':'#fff','circle-stroke-width':2.5},{},'circle');
+  }
+  add('draft-casing','draft',{'line-color':'#fff','line-width':9},round);
+  add('draft-line','draft',{'line-color':'#1a73e8','line-width':5,'line-dasharray':[1.5,1]},round);
+  add('rec-casing','rec',{'line-color':'#fff','line-width':9},round);
+  add('rec-line','rec',{'line-color':'#d93025','line-width':5},round);
+}
+function lineOf(tr){ return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:tr.pts.filter((p,i)=>i===0||p.lon!==tr.pts[i-1].lon||p.lat!==tr.pts[i-1].lat).map(p=>[p.lon,p.lat])}}; }
+function gradientOf(tr,solid){
+  if(solid) return ['interpolate',['linear'],['line-progress'],0,solid,1,solid];
+  const coords=lineOf(tr).geometry.coordinates; const cum=[0]; for(let i=1;i<coords.length;i++) cum.push(cum[i-1]+hav(coords[i-1][0],coords[i-1][1],coords[i][0],coords[i][1]));
+  const tot=cum[cum.length-1]||1, N=Math.min(120,coords.length), expr=['interpolate',['linear'],['line-progress']]; let lastP=-1, j=0;
+  const uniq=tr.pts.filter((p,i)=>i===0||p.lon!==tr.pts[i-1].lon||p.lat!==tr.pts[i-1].lat);
+  for(let k=0;k<N;k++){ const target=tot*k/(N-1); while(j<cum.length-1&&cum[j]<target) j++; const p=+(cum[j]/tot).toFixed(5); if(p<=lastP) continue; lastP=p; expr.push(p,rampColor(uniq[j].v)); }
+  if(expr.length<7) return ['interpolate',['linear'],['line-progress'],0,tok['--a'],1,tok['--a']];
+  return expr; }
+function refreshTrackData(){
+  if(!mapReady) return; const comparing=!!byId(B);
+  for(const r of ['A','B']){ const tr=byId(r==='A'?A:B), src=map.getSource(r);
+    if(!tr){ src.setData(emptyFC); map.getSource(r+'p').setData(emptyFC); map.getSource(r+'e').setData(emptyFC); markers[r].remove(); continue; }
+    src.setData(lineOf(tr)); map.setPaintProperty(r+'-line','line-gradient',gradientOf(tr,comparing||tr.synthetic?tok['--'+r.toLowerCase()]:null));
+    const f=tr.pts[0],l=tr.pts[tr.pts.length-1];
+    map.getSource(r+'e').setData({type:'FeatureCollection',features:[{type:'Feature',properties:{c:'#188038'},geometry:{type:'Point',coordinates:[f.lon,f.lat]}},{type:'Feature',properties:{c:'#d93025'},geometry:{type:'Point',coordinates:[l.lon,l.lat]}}]});
+    markers[r].addTo(map); }
+  lastPassed=0;
+}
+let lastPassed=0;
+function updatePassed(now){ if(!mapReady||now-lastPassed<60) return; lastPassed=now;
+  for(const r of ['A','B']){ const tr=byId(r==='A'?A:B); if(!tr) continue; const st=stateAt(tr,Math.min(tc,tr.stats.elapsed));
+    const c=tr.pts.slice(0,st.i+1).map(p=>[p.lon,p.lat]); c.push([st.lon,st.lat]); map.getSource(r+'p').setData({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:c.length>1?c:[c[0],c[0]]}}); } }
+function fitTracks(){ const ts=[byId(A),byId(B)].filter(Boolean); if(!ts.length||!map) return;
+  let [[w,s],[e,n]]=ts[0].bounds; ts.slice(1).forEach(t=>{w=Math.min(w,t.bounds[0][0]);s=Math.min(s,t.bounds[0][1]);e=Math.max(e,t.bounds[1][0]);n=Math.max(n,t.bounds[1][1]);});
+  map.fitBounds([[w,s],[e,n]],{padding:sheetPadding(60),bearing:0,pitch:0,duration:600,maxZoom:16}); }
+function sheetPadding(base){ const wide=innerWidth>=900; return wide?{top:base+60,bottom:base,left:420+base,right:base+60}:{top:base+60,bottom:sheetH()+base,left:base,right:base+50}; }
+function sheetH(){ return $('#sheet').getBoundingClientRect().height; }
+
+/* ================= playback & camera ================= */
+let tc=0,playing=false,dir=1,rate=10,need=true,cam='follow',smoothBear=null;
+function activeTracks(){return [byId(A),byId(B)].filter(Boolean);}
+function duration(){return Math.max(0,...activeTracks().map(t=>t.stats.elapsed));}
+function setPlaying(p){ playing=p; $('#playIcon').innerHTML=p?'<path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/>':'<path d="M7 5v14l11-7z" fill="currentColor"/>';
+  $('#tPlay').setAttribute('aria-label',p?'Pause':'Play'); $('#tBack').classList.toggle('on',p&&dir<0); wakeLock(p||recording); }
+function play(d){ const dur=duration(); dir=d; if(d>0&&tc>=dur) tc=0; if(d<0&&tc<=0) tc=dur; setPlaying(true); }
+const CAMS=['follow','driver','free'], CAMLBL={follow:'Driver view',driver:'Overview',free:'Re-center'};
+function setCam(m){ cam=m; $('#camLbl').textContent=CAMLBL[m]; need=true;
+  if(!map) return;
+  if(m==='driver'){ map.easeTo({pitch:60,zoom:Math.max(map.getZoom(),16.5),padding:camPadding(),duration:700}); }
+  else if(m==='follow'){ map.easeTo({pitch:0,bearing:0,padding:camPadding(),duration:600}); smoothBear=null; } }
+function camPadding(){ const wide=innerWidth>=900, h=innerHeight; return cam==='driver'?{top:h*0.38,bottom:wide?20:sheetH(),left:wide?420:0,right:0}:{top:60,bottom:wide?0:sheetH(),left:wide?420:0,right:0}; }
+$('#camBtn').onclick=()=>{ if(cam==='free'||cam==='driver'){ if(cam==='driver'){ setCam('free'); fitTracks(); return; } setCam('follow'); } else setCam('driver'); };
+function angDiff(a,b){let d=b-a;while(d>180)d-=360;while(d<-180)d+=360;return d;}
+let last=performance.now(), lastUI=0;
+function frame(now){ const dt=Math.min(.1,(now-last)/1000); last=now; const dur=duration();
+  if(playing&&!recording){ tc+=dt*rate*dir; if(dir>0&&tc>=dur){tc=dur;setPlaying(false);} if(dir<0&&tc<=0){tc=0;setPlaying(false);} need=true; }
+  if(recording) { tc=(Date.now()-rec.t0)/1000; need=true; }
+  if(need&&map){
+    for(const r of ['A','B']){ const tr=byId(r==='A'?A:B); if(!tr||(recording&&r==='B')) continue; if(recording&&!rec.ghost&&r==='A') { markers.A.remove(); continue; }
+      const st=stateAt(tr,Math.min(tc,tr.stats.elapsed)), h=headingAt(tr,Math.min(tc,tr.stats.elapsed)); markers[r].setLngLat([st.lon,st.lat]); if(h!=null) markers[r].setRotation(h); }
+    updatePassed(now);
+    const a=byId(A);
+    const focus = recording&&rec.pos ? {lon:rec.pos[1],lat:rec.pos[2],h:rec.heading} : (a? (()=>{const t=Math.min(tc,a.stats.elapsed);const s=stateAt(a,t);return {lon:s.lon,lat:s.lat,h:headingAt(a,t)};})() : null);
+    if(focus&&cam!=='free'&&mapReady&&!map.isMoving()){
+      const o={center:[focus.lon,focus.lat],padding:camPadding()};
+      if(cam==='driver'&&focus.h!=null){ smoothBear=smoothBear==null?focus.h:(smoothBear+angDiff(smoothBear,focus.h)*(1-Math.exp(-dt*3))+360)%360; o.bearing=smoothBear; }
+      map.jumpTo(o); }
+    if(now-lastUI>66){ lastUI=now; updateUI(); }
+    need=playing||recording||cam!=='free';
+  }
+  requestAnimationFrame(frame); }
+
+/* ================= UI updates ================= */
+function tod(tr,t){ if(!tr||!tr.start) return ''; const d=new Date(Date.parse(tr.start)+t*1000+(tr.tz??-new Date().getTimezoneOffset())*60000); return d.toISOString().slice(11,16); }
+function updateUI(){
+  const a=byId(A), b=byId(B), dur=duration();
+  $('#tNow').textContent=fmtDur(tc); $('#tDur').textContent=fmtDur(dur); const sc=$('#scrub'); sc.max=dur||1; if(document.activeElement!==sc) sc.value=tc;
+  if(recording){ const el=(Date.now()-rec.t0)/1000; $('#spdA').textContent=Math.round((rec.speed||0)*3.6);
+    $('#etaBig').textContent=fmtDur(el); $('#etaRest').textContent=`· ${km(rec.dist)} km recorded`;
+    let s=`${fmtDur(el)} · ${km(rec.dist)} km`; if(rec.ghost&&a){ const g=timeAtDist(a,rec.dist)-el; s+= isFinite(g)?` · ${g>=0?'ahead of':'behind'} A by ${fmtDur(Math.abs(g))}`:' · past A’s finish'; }
+    $('#recStats').textContent=s; $('#nav').hidden=true; return; }
+  if(!a){ $('#etaBig').textContent='No track'; $('#etaRest').textContent='Import or create one'; return; }
+  const ta=Math.min(tc,a.stats.elapsed), sa=stateAt(a,ta);
+  $('#spdA').textContent=Math.round(sa.v*3.6);
+  const remain=a.stats.elapsed-ta, rd=a.stats.dist-sa.d;
+  if(dir<0&&playing){ $('#etaBig').textContent='◀ '+fmtMin(ta); $('#etaRest').textContent=`· ${fmtDist(sa.d)} back to start`; }
+  else { $('#etaBig').textContent=fmtMin(remain); $('#etaRest').textContent=`· ${fmtDist(rd)}${a.start?' · '+tod(a,a.stats.elapsed+a.pts[0].t):''}`; }
+  $('#bubB').hidden=!b; $('#gapChip').hidden=!b;
+  if(b){ const tb=Math.min(tc,b.stats.elapsed), sb=stateAt(b,tb); $('#spdB').textContent=Math.round(sb.v*3.6);
+    const g=timeAtDist(a,sb.d)-tb; $('#gapChip').innerHTML=isFinite(g)?(Math.abs(g)<0.5?'Level':`<span style="color:var(--${g>0?'b':'a'})">${g>0?'B':'A'}</span> ahead ${fmtDur(Math.abs(g))}`):'B finished'; }
+  // turn-by-turn banner
+  const steps=a.navSteps; if(steps&&steps.length&&!b){ const nx=steps.find(s=>s.d>sa.d+5)||steps[steps.length-1];
+    $('#nav').hidden=false; $('#navDist').textContent=fmtDist(Math.max(0,nx.d-sa.d)); $('#navTxt').textContent=stepText(nx);
+    const ang=nx.type==='arrive'?null:MOD_ANGLE[nx.mod]??0;
+    $('#navArrow').innerHTML= ang==null?'<circle cx="24" cy="20" r="9" fill="none" stroke="currentColor" stroke-width="4"/><path d="M24 29v13" stroke="currentColor" stroke-width="4"/>'
+      : (nx.type==='roundabout'||nx.type==='rotary')?'<circle cx="24" cy="26" r="9" fill="none" stroke="currentColor" stroke-width="4"/><path d="M24 4l7 9h-5v8h-4v-8h-5z" fill="currentColor"/>'
+      : `<g transform="rotate(${ang} 24 24)"><path d="M24 6 L36 20 H28 V42 H20 V20 H12 Z" fill="currentColor"/></g>`;
+  } else $('#nav').hidden=true;
+  if(openTab==='trip'&&$('#sheet').classList.contains('open')||openTab==='trip'&&innerWidth>=900) drawChart($('#chartTrip'),'speed');
+  if(openTab==='compare'&&b&&($('#sheet').classList.contains('open')||innerWidth>=900)) drawChart($('#chartGap'),'gap');
+}
+function updatePill(){ const a=byId(A),b=byId(B);
+  $('#pillDot').style.background=a?(b?tok['--a']:a.color):tok['--muted'];
+  $('#pillTitle').innerHTML=a?`${esc(a.name)}<small>${b?'vs '+esc(b.name):`${km(a.stats.dist)} km · ${fmtDur(a.stats.elapsed)}${a.start?' · '+new Date(Date.parse(a.start)).toISOString().slice(0,10):''}`}</small>`:'Track Replay<small>Import or create a track</small>'; }
+
+/* ================= charts ================= */
+const dpr=Math.min(devicePixelRatio||1,2);
+function drawChart(cv,mode){ if(!cv) return; const r=cv.getBoundingClientRect(); if(!r.width) return; if(cv.width!==Math.round(r.width*dpr)){cv.width=r.width*dpr;cv.height=r.height*dpr;}
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); const W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  const ts=activeTracks(), dur=duration(); if(!ts.length||!dur) return; const L=38,Rr=36,T=14,Bm=20,w=W-L-Rr,h=H-T-Bm, X=t=>L+t/dur*w; cv._x={L,w,dur};
+  ctx.font='11px "Roboto Mono", monospace'; ctx.lineWidth=1; ctx.strokeStyle=tok['--line']; ctx.fillStyle=tok['--muted']; ctx.textAlign='center';
+  const xt=timeStep(dur/5); for(let t=0;t<=dur;t+=xt){ctx.beginPath();ctx.moveTo(X(t),T);ctx.lineTo(X(t),T+h);ctx.stroke();ctx.fillText(fmtDur(t),X(t),H-5);}
+  if(mode==='gap'&&ts.length>1){ const [a,b]=ts,N=Math.max(60,Math.floor(w)),ser=[];
+    for(let i=0;i<=N;i++){const t=i/N*Math.min(dur,b.stats.elapsed),g=timeAtDist(a,stateAt(b,t).d)-t;if(isFinite(g))ser.push([t,g]);}
+    if(ser.length>1){ const m=Math.max(10,...ser.map(s=>Math.abs(s[1]))),yt=timeStep(m/2),M=Math.ceil(m/yt)*yt,Y=g=>T+h/2-g/M*h/2; ctx.textAlign='right';
+      for(let g=-M;g<=M;g+=yt){ctx.beginPath();ctx.moveTo(L,Y(g));ctx.lineTo(L+w,Y(g));ctx.stroke();ctx.fillText(fmtDur(g,true),L-4,Y(g)+4);}
+      [['--b',0],['--a',1]].forEach(([col,k])=>{ctx.save();ctx.beginPath();ctx.rect(L,k?Y(0):T,w,h/2);ctx.clip();ctx.beginPath();ctx.moveTo(X(ser[0][0]),Y(0));ser.forEach(([t,g])=>ctx.lineTo(X(t),Y(g)));ctx.lineTo(X(ser[ser.length-1][0]),Y(0));ctx.closePath();
+        ctx.fillStyle=tok[col];ctx.globalAlpha=.25;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=tok[col];ctx.lineWidth=2;ctx.stroke();ctx.restore();});
+      ctx.textAlign='left';ctx.fillStyle=tok['--b'];ctx.fillText('B ahead',L+4,T+11);ctx.fillStyle=tok['--a'];ctx.fillText('A ahead',L+4,T+h-4); }
+  } else {
+    const a=ts[0];
+    if(a.stats.minAlt!=null){ const lo=Math.floor(a.stats.minAlt/10)*10,hi=Math.max(lo+20,Math.ceil(a.stats.maxAlt/10)*10),Ya=v=>T+h-(v-lo)/(hi-lo)*h;
+      ctx.beginPath();ctx.moveTo(X(0),T+h);a.pts.forEach(p=>{if(p.altS!=null)ctx.lineTo(X(p.t-a.pts[0].t),Ya(p.altS));});ctx.lineTo(X(a.stats.elapsed),T+h);ctx.closePath();
+      ctx.fillStyle=tok['--line'];ctx.globalAlpha=.6;ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=tok['--muted'];ctx.textAlign='left';ctx.fillText(hi+' m',L+w+3,T+9);ctx.fillText(lo+' m',L+w+3,T+h); }
+    const vm=Math.max(...ts.map(t=>t.stats.maxV))*3.6,yt=vm>80?40:20,M=Math.max(yt,Math.ceil(vm/yt)*yt),Y=v=>T+h-v*3.6/M*h; ctx.textAlign='right';ctx.fillStyle=tok['--muted'];ctx.strokeStyle=tok['--line'];
+    for(let v=0;v<=M;v+=yt){ctx.beginPath();ctx.moveTo(L,Y(v/3.6));ctx.lineTo(L+w,Y(v/3.6));ctx.stroke();ctx.fillText(v,L-5,Y(v/3.6)+4);}
+    ts.slice().reverse().forEach((tr,k)=>{ctx.strokeStyle=ts.length>1&&k===0?tok['--b']:tok['--a'];ctx.lineWidth=1.8;ctx.beginPath();let open=false;
+      tr.pts.forEach((p,i)=>{const x=X(p.t-tr.pts[0].t),y=Y(p.v);if(!open||p.seg!==tr.pts[i-1].seg){ctx.moveTo(x,y);open=true;}else ctx.lineTo(x,y);});ctx.stroke();});
+  }
+  const x=X(Math.min(tc,dur)); ctx.strokeStyle=tok['--ink']; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,T-4); ctx.lineTo(x,T+h); ctx.stroke();
+}
+function bindChart(cv){ const seek=e=>{ const x=cv._x; if(!x) return; const r=cv.getBoundingClientRect(); tc=Math.max(0,Math.min(x.dur,(e.clientX-r.left-x.L)/x.w*x.dur)); need=true; };
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);seek(e);}); cv.addEventListener('pointermove',e=>{if(e.buttons)seek(e);}); }
+
+/* ================= panels ================= */
+let openTab='trip';
+function showTab(n){ openTab=n; document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===n)); ['trip','tracks','compare','create','redo'].forEach(x=>$('#panel-'+x).hidden=x!==n); need=true; setTimeout(updateUI,0); }
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function renderTrip(){ const a=byId(A), el=$('#panel-trip');
+  if(!a){ el.innerHTML='<p>No track selected. Import a file in Tracks, or make one in Create.</p>'; return; }
+  const s=a.stats, st=(k,v,u)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}${u?`<small>${u}</small>`:''}</div></div>`;
+  el.innerHTML=`<h3>${esc(a.name)}</h3><div class="stats">
+    ${st('Distance',km(s.dist),'km')}${st('Time',fmtDur(s.elapsed))}${st('Moving',fmtDur(s.moving))}
+    ${st('Avg speed',kmh(s.avg),'km/h')}${st('Moving avg',kmh(s.avgMoving),'km/h')}${st('Top speed',kmh(s.maxV),'km/h')}
+    ${st('Stops',s.stops)}${st('Climb',s.gain==null?'—':Math.round(s.gain),s.gain==null?'':'m')}${st('80+ km/h',fmtDur(s.fast))}</div>
+    <div class="chart"><canvas id="chartTrip" aria-label="Speed and elevation over time; tap to jump"></canvas></div>
+    <p class="foot">${esc(a.source||'')}${a.note?' · '+esc(a.note):''}${a.navSteps?' · Turn-by-turn directions show in the green banner while it plays.':''}</p>`;
+  bindChart($('#chartTrip')); }
+function renderList(){ $('#tlist').innerHTML=tracks.map(t=>`<div class="trk">
+    <span class="sw" style="background:${t.color}"></span><span class="nm" title="${esc(t.name)}">${esc(t.name)}</span>
+    <span class="meta">${t.start?new Date(Date.parse(t.start)).toISOString().slice(0,10)+' · ':''}${km(t.stats.dist)} km · ${fmtDur(t.stats.elapsed)} · ${kmh(t.stats.avgMoving)} km/h</span>
+    ${t.note?`<span class="note">${esc(t.note)}</span>`:''}
+    <span class="acts">
+      <button class="chipbtn ${t.id===A?'onA':''}" data-a="${t.id}" aria-pressed="${t.id===A}">A</button>
+      <button class="chipbtn ${t.id===B?'onB':''}" data-b="${t.id}" aria-pressed="${t.id===B}">B</button>
+      <button class="chipbtn" data-rev="${t.id}">⇄ Reverse</button>
+      <button class="chipbtn" data-gpx="${t.id}">GPX</button>
+      ${t.builtin?'':`<button class="chipbtn" data-del="${t.id}">Delete</button>`}
+    </span></div>`).join('');
+  const L=$('#tlist');
+  L.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const id=b.dataset.a; if(B===id)B=A; A=id; persist(); onTracksChanged(true);});
+  L.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const id=b.dataset.b; if(B===id)B=null; else { if(A===id){toast('That track is already A. Pick a different one for B.');return;} B=id; } persist(); onTracksChanged(true);});
+  L.querySelectorAll('[data-rev]').forEach(b=>b.onclick=()=>{ $('#revSrc').value=b.dataset.rev; showTab('create'); $('#revGo').scrollIntoView({block:'center',behavior:'smooth'}); });
+  L.querySelectorAll('[data-gpx]').forEach(b=>b.onclick=()=>downloadGPX(byId(b.dataset.gpx)));
+  L.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Tap again to delete';setTimeout(()=>{if(b.isConnected){b.dataset.armed='';b.textContent='Delete';}},2500);return;}
+    const id=b.dataset.del; tracks=tracks.filter(t=>t.id!==id); if(A===id){A=B;B=null;} if(B===id)B=null; if(!A&&tracks[0])A=tracks[0].id; persist(); onTracksChanged(true); });
+  $('#revSrc').innerHTML=tracks.map(t=>`<option value="${t.id}" ${t.id===A?'selected':''}>${esc(t.name)}</option>`).join(''); }
+function renderCompare(){ const a=byId(A),b=byId(B),el=$('#panel-compare');
+  if(!a||!b){ el.innerHTML=`<h3>Compare two drives</h3><p>Pick a challenger to race against ${a?'<b>'+esc(a.name)+'</b>':'track A'}: import another recording of the same route, record one with GPS, or plan a redo.</p>
+    <div class="row"><button class="btn" id="cImp">Import a drive</button><button class="btn ghost" id="cRec">Record one</button><button class="btn ghost" id="cRedo">Plan a redo</button></div>`;
+    $('#cImp').onclick=()=>$('#file').click(); $('#cRec').onclick=()=>showTab('create'); $('#cRedo').onclick=()=>showTab('redo'); return; }
+  const SA=a.stats,SB=b.stats,dc=Math.min(SA.dist,SB.dist),ta=timeAtDist(a,dc),tb=timeAtDist(b,dc),dt=tb-ta;
+  const rows=[['Elapsed time',fmtDur(SA.elapsed),fmtDur(SB.elapsed),SB.elapsed-SA.elapsed,'time'],['Moving time',fmtDur(SA.moving),fmtDur(SB.moving),SB.moving-SA.moving,'time'],
+    ['Stopped time',fmtDur(SA.stopped),fmtDur(SB.stopped),SB.stopped-SA.stopped,'time'],['Stops (10 s+)',SA.stops,SB.stops,SB.stops-SA.stops,'count'],
+    ['Distance (km)',km(SA.dist),km(SB.dist),SB.dist-SA.dist,'dist'],['Average (km/h)',kmh(SA.avg),kmh(SB.avg),SB.avg-SA.avg,'speed'],
+    ['Moving avg (km/h)',kmh(SA.avgMoving),kmh(SB.avgMoving),SB.avgMoving-SA.avgMoving,'speed'],['Top speed (km/h)',kmh(SA.maxV),kmh(SB.maxV),SB.maxV-SA.maxV,'speed'],
+    ['Time at 80+ km/h',fmtDur(SA.fast),fmtDur(SB.fast),SB.fast-SA.fast,'neutral']];
+  const cell=(v,k)=>k==='time'?`<td class="${v<-.5?'pos':v>.5?'neg':''}">${fmtDur(v,true)}</td>`:k==='count'?`<td class="${v<0?'pos':v>0?'neg':''}">${v>0?'+':''}${v}</td>`:
+    k==='dist'?`<td>${v>=0?'+':'−'}${Math.abs(v/1000).toFixed(2)}</td>`:k==='speed'?`<td>${v>=0?'+':'−'}${Math.abs(v*3.6).toFixed(1)}</td>`:`<td>${fmtDur(v,true)}</td>`;
+  const mis=Math.abs(SA.dist-SB.dist)/Math.max(SA.dist,SB.dist);
+  const Ls=dc>60000?5000:dc>15000?2000:1000,n=Math.floor(dc/Ls),sp=[]; for(let i=1;i<=n+(dc%Ls>200?1:0);i++){const d0=(i-1)*Ls,d1=Math.min(i*Ls,dc);const sa=timeAtDist(a,d1)-timeAtDist(a,d0),sb=timeAtDist(b,d1)-timeAtDist(b,d0);sp.push({d:d1,sa,sb,dd:sb-sa});}
+  const mx=Math.max(5,...sp.map(s=>Math.abs(s.dd)));
+  el.innerHTML=`<div class="verdict">${Math.abs(dt)<1?'<b>Dead heat</b>over the shared distance.':`<b style="color:var(--${dt<0?'b':'a'})">${dt<0?'B':'A'} wins by ${fmtDur(Math.abs(dt))}</b>over the shared ${km(dc)} km (A ${fmtDur(ta)}, B ${fmtDur(tb)})`}</div>
+    ${mis>.05?`<p class="warn">These tracks differ in length by ${(mis*100).toFixed(0)}%, so they may not follow the same route. Gaps are measured by distance from the start.</p>`:''}
+    <table class="kpi"><thead><tr><th></th><th class="A">A</th><th class="B">B</th><th>B − A</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>${cell(r[3],r[4])}</tr>`).join('')}</tbody></table>
+    <p class="help" style="margin-top:6px">Green means B did better.</p>
+    <h3>Gap over time</h3><div class="chart"><canvas id="chartGap" aria-label="Time gap between A and B; tap to jump"></canvas></div>
+    <h3>Splits every ${Ls/1000} km</h3><div class="splits"><div class="split head"><span>km</span><span>A</span><span>B</span><span style="text-align:center">B faster · A faster</span><span class="d">B − A</span></div>
+    ${sp.map(s=>{const w=Math.abs(s.dd)/mx*50,pos=s.dd<0;return `<div class="split"><span>${(s.d/1000).toFixed(s.d%1000?1:0)}</span><span>${fmtDur(s.sa)}</span><span>${fmtDur(s.sb)}</span><span class="bar"><i style="${pos?`right:50%;width:${w}%;background:var(--b)`:`left:50%;width:${w}%;background:var(--a)`}"></i></span><span class="d ${pos?'pos':s.dd>0?'neg':''}">${fmtDur(s.dd,true)}</span></div>`;}).join('')}</div>`;
+  bindChart($('#chartGap')); }
+
+/* ================= redo planner ================= */
+function planRedo(tr,k,capKmh,skip){ const cap=capKmh>0?capKmh/3.6:Infinity,segs=[]; let t=0,prev=null,seg=null,si=-1;
+  for(const p of tr.pts){ if(p.seg!==si){seg=[];segs.push(seg);si=p.seg;}
+    if(prev){ const dt=p.t-prev.t,dd=p.seg===prev.seg?p.d-prev.d:hav(prev.lon,prev.lat,p.lon,p.lat),v=dd/dt;
+      if(v<0.6){ if(skip){ if(dd===0){prev=p;continue;} t+=dd/3; } else t+=dt; } else t+=Math.max(.05,dd/Math.min(v*k,cap)); }
+    seg.push([t,p.lon,p.lat,p.alt]); prev=p; }
+  return segs.filter(s=>s.length>1); }
+function updateEstimate(){ const a=byId(A),k=+$('#rk').value/100,cap=+$('#rcap').value||0,skip=$('#rskip').checked;
+  $('#rkOut').textContent=Math.round(k*100)+'%'; $('#rcapOut').textContent=cap?cap+' km/h':'no limit';
+  if(!a){$('#estimate').innerHTML='<span class="sm">Choose a track as A first.</span>';return;}
+  const segs=planRedo(a,k,cap,skip),T=segs.length?segs[segs.length-1].slice(-1)[0][0]:0,d=T-a.stats.elapsed;
+  $('#estimate').innerHTML=`<div class="sm">Estimated time for “${esc(a.name)}”</div><div class="big">${fmtDur(T)}</div><div class="sm">${fmtDur(Math.abs(d))} ${d<0?'faster':'slower'} than the original ${fmtDur(a.stats.elapsed)}</div>`; }
+['rk','rcap','rskip'].forEach(id=>$('#'+id).addEventListener('input',updateEstimate));
+$('#rgo').onclick=()=>{ const a=byId(A); if(!a){toast('Choose a track as A first.');return;}
+  const k=+$('#rk').value/100,cap=+$('#rcap').value||0,skip=$('#rskip').checked;
+  const tr=addTrack({name:`Redo · ${Math.round(k*100)}% pace${cap?' · ≤'+cap+' km/h':''}${skip?' · no stops':''}`,start:a.start,tz:a.tz,segs:planRedo(a,k,cap,skip),source:'Planned from '+a.name,synthetic:true},'B');
+  tc=0; onTracksChanged(false); showTab('compare'); play(1); toast(`Created “${tr.name}”. Racing it against A now.`); };
+
+/* ================= reverse ================= */
+let revMode='exact';
+document.querySelectorAll('[data-rev]').forEach(b=>{ if(!b.closest('.seg')) return; b.onclick=()=>{ revMode=b.dataset.rev; document.querySelectorAll('.seg [data-rev]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  $('#revHelp').textContent=revMode==='exact'?'Same path: the line and the speed you drove at each point are kept, played back the other way.':'Re-route on roads: finds a drivable route from the finish back to the start along the same streets, respecting one-way roads. Times are typical free-flow driving times.'; }; });
+function reverseExact(tr){ const T=Math.max(...tr.segs.map(s=>s[s.length-1][0]));
+  return {name:'Reverse · '+tr.name,start:null,tz:tr.tz,source:'Reversed from '+tr.name,segs:tr.segs.slice().reverse().map(s=>s.slice().reverse().map(p=>[T-p[0],p[1],p[2],p[3]]))}; }
+function sampleWaypoints(tr,n){ const p=tr.pts.slice().reverse(), tot=tr.stats.dist, out=[[p[0].lon,p[0].lat]];
+  for(let k=1;k<n-1;k++){ const target=tot-tot*k/(n-1); const q=p.find(x=>x.d<=target); if(q) out.push([q.lon,q.lat]); }
+  out.push([p[p.length-1].lon,p[p.length-1].lat]); return out; }
+$('#revGo').onclick=async()=>{ const src=byId($('#revSrc').value); if(!src) return; const btn=$('#revGo'); btn.disabled=true;
+  try{ let raw;
+    if(revMode==='exact') raw=reverseExact(src);
+    else { btn.textContent='Finding a route…'; const r=await osrmRoute(sampleWaypoints(src,Math.min(25,Math.max(4,Math.round(src.stats.dist/1500)))));
+      raw={name:'Reverse on roads · '+src.name,start:null,tz:src.tz,segs:r.segs,steps:r.steps,source:'Routed with OSRM (OpenStreetMap) from the finish back to the start',synthetic:true}; }
+    const tr=addTrack(raw,'solo'); tc=0; onTracksChanged(true); showTab('trip'); collapseSheet(); toast(`Created “${tr.name}”: ${km(tr.stats.dist)} km, ${fmtDur(tr.stats.elapsed)}. Press play to drive it.`);
+  }catch(e){ toast('Couldn’t find a road route. Check your connection, or use “Same path”.'); }
+  btn.disabled=false; btn.textContent='Create reversed track'; };
+
+/* ================= draw a route ================= */
+let drawing=false, wps=[], wpMarkers=[], draft=null, draftTimer=null;
+$('#drawStart').onclick=()=>{ if(!map) return; drawing=true; wps=[]; draft=null; $('#drawIdle').hidden=true; $('#drawActive').hidden=false; $('#drawName').value='Route · '+new Date().toLocaleDateString();
+  $('#drawBar').hidden=false; document.body.classList.add('drawing'); setCam('free'); setPlaying(false); collapseSheet(); renderDraft(); };
+function stopDrawing(){ drawing=false; wpMarkers.forEach(m=>m.remove()); wpMarkers=[]; wps=[]; draft=null; $('#drawIdle').hidden=false; $('#drawActive').hidden=true; $('#drawBar').hidden=true; document.body.classList.remove('drawing'); if(map&&map.getSource('draft')) map.getSource('draft').setData(emptyFC); }
+$('#drawCancel').onclick=stopDrawing;
+$('#drawUndo').onclick=()=>{ wps.pop(); renderDraft(); };
+function onMapClick(e){ if(!drawing) return; wps.push([e.lngLat.lng,e.lngLat.lat]); renderDraft(); }
+function renderDraft(){
+  wpMarkers.forEach(m=>m.remove()); wpMarkers=wps.map((c,i)=>{ const el=document.createElement('div'); el.className='wp'; el.textContent=i===0?'S':(i===wps.length-1&&wps.length>1?'F':i);
+    el.style.background=i===0?'#188038':(i===wps.length-1&&wps.length>1?'#d93025':'#1a73e8');
+    const m=new maplibregl.Marker({element:el,draggable:true}).setLngLat(c).addTo(map); m.on('dragend',()=>{const l=m.getLngLat(); wps[i]=[l.lng,l.lat]; renderDraft();}); return m; });
+  $('#drawHint').textContent=wps.length===0?'Tap the map to set the start':wps.length===1?'Tap to add the finish':'Tap to add more stops, then save';
+  $('#drawSave').disabled=$('#drawSave2').disabled=wps.length<2;
+  if(wps.length<2){ draft=null; if(map.getSource('draft')) map.getSource('draft').setData(emptyFC); $('#drawInfo').innerHTML=`<span class="sm">${wps.length?'Now tap where the route ends.':'Tap the map to add your first point.'}</span>`; return; }
+  clearTimeout(draftTimer); draftTimer=setTimeout(async()=>{ const snap=wps.slice(); let r, roads=$('#drawRoads').checked;
+    $('#drawInfo').innerHTML='<span class="sm">Finding a route…</span>';
+    try{ r=roads?await osrmRoute(snap):straightRoute(snap); }catch(e){ r=straightRoute(snap); roads=false; toast('Couldn’t reach the routing service, so stops are joined with straight lines.'); }
+    if(snap.length!==wps.length||!drawing) return; draft={...r,roads};
+    map.getSource('draft').setData({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:r.segs[0].map(p=>[p[1],p[2]])}});
+    let d=0; const s=r.segs[0]; for(let i=1;i<s.length;i++) d+=hav(s[i-1][1],s[i-1][2],s[i][1],s[i][2]);
+    $('#drawInfo').innerHTML=`<div class="big">${fmtMin(r.duration)}</div><div class="sm">${fmtDist(d)} · ${wps.length} points · ${roads?'following roads':'straight lines at 50 km/h'}</div>`; },250);
+}
+$('#drawUndo2').onclick=()=>$('#drawUndo').click(); $('#drawSave2').onclick=()=>$('#drawSave').click(); $('#drawCancel2').onclick=stopDrawing;
+$('#drawRoads').onchange=()=>{ if(drawing) renderDraft(); };
+$('#drawSave').onclick=()=>{ if(!draft) return; const name=$('#drawName').value.trim()||'New route';
+  const tr=addTrack({name,start:null,tz:null,segs:draft.segs,steps:draft.steps,source:draft.roads?'Drawn route, routed with OSRM (OpenStreetMap)':'Drawn route, straight lines',synthetic:true},'solo');
+  stopDrawing(); tc=0; onTracksChanged(true); showTab('trip'); toast(`Saved “${tr.name}”. Press play to drive it.`); };
+
+/* ================= GPS recording ================= */
+let recording=false, rec=null, watchId=null;
+$('#recStart').onclick=()=>{ if(!('geolocation' in navigator)){toast('This browser has no GPS access.');return;}
+  rec={t0:Date.now(),pts:[],dist:0,speed:0,pos:null,heading:null,ghost:$('#recGhost').checked&&!!byId(A)};
+  watchId=navigator.geolocation.watchPosition(onFix,err=>{ toast(err.code===1?'Location permission was refused. Allow location for this site in your browser settings, then try again.':'Waiting for a GPS signal…'); if(err.code===1) stopRecording(false); },{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+  recording=true; tc=0; setPlaying(false); $('#recBar').hidden=false; $('#pill').hidden=true; $('#nav').hidden=true; collapseSheet(); setCam('driver'); wakeLock(true);
+  toast('Recording. Waiting for GPS…'); };
+function onFix(p){ const c=p.coords, now=p.timestamp||Date.now(); const pt=[(now-rec.t0)/1000,c.longitude,c.latitude,c.altitude];
+  if(c.accuracy>50&&rec.pts.length) return;
+  const lastP=rec.pts[rec.pts.length-1];
+  if(lastP){ const d=hav(lastP[1],lastP[2],pt[1],pt[2]); if(d>2){ rec.dist+=d; rec.heading=c.heading!=null&&!isNaN(c.heading)&&c.speed>1?c.heading:bearing(lastP[1],lastP[2],pt[1],pt[2]); } }
+  rec.speed=c.speed!=null&&!isNaN(c.speed)?c.speed:(lastP?hav(lastP[1],lastP[2],pt[1],pt[2])/Math.max(pt[0]-lastP[0],.5):0);
+  rec.pts.push(pt); rec.pos=pt; markers.me.setLngLat([pt[1],pt[2]]).addTo(map);
+  if(mapReady) map.getSource('rec').setData({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:rec.pts.length>1?rec.pts.map(q=>[q[1],q[2]]):[[pt[1],pt[2]],[pt[1],pt[2]]]}}); need=true; }
+$('#recStop').onclick=()=>stopRecording(true);
+function stopRecording(save){ if(watchId!=null) navigator.geolocation.clearWatch(watchId); watchId=null; recording=false; $('#recBar').hidden=true; $('#pill').hidden=false; markers.me.remove();
+  if(mapReady) map.getSource('rec').setData(emptyFC); wakeLock(false);
+  if(save){ if(!rec||rec.pts.length<5){ toast('Too few GPS points were recorded, so nothing was saved.'); }
+    else { const t0=rec.t0, name='Recorded · '+new Date(t0).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+      const raw={name,start:new Date(t0).toISOString(),tz:-new Date().getTimezoneOffset(),segs:[rec.pts.map(p=>[p[0],p[1],p[2],p[3]])],source:'Recorded with GPS in Track Replay'};
+      try{ const tr=addTrack(raw,byId(A)?'B':'A'); tc=0; onTracksChanged(false); showTab(byId(B)?'compare':'trip'); expandSheet(); toast(`Saved “${tr.name}”: ${km(tr.stats.dist)} km.`); }catch(e){ toast('The recording had no usable points.'); } } }
+  rec=null; setCam('follow'); }
+
+/* ================= misc controls ================= */
+let wl=null; async function wakeLock(on){ try{ if(on&&!wl&&navigator.wakeLock){ wl=await navigator.wakeLock.request('screen'); wl.addEventListener('release',()=>wl=null); } else if(!on&&wl){ await wl.release(); wl=null; } }catch(e){} }
+$('#tPlay').onclick=()=>{ if(recording) return; playing?setPlaying(false):play(dir>0||tc<=0?1:dir); };
+$('#tBack').onclick=()=>{ if(recording) return; playing&&dir<0?setPlaying(false):play(-1); };
+$('#tStart').onclick=()=>{tc=0;need=true;}; $('#tEnd').onclick=()=>{tc=duration();need=true;};
+$('#rate').onchange=e=>rate=+e.target.value; $('#scrub').oninput=e=>{tc=+e.target.value;need=true;};
+$('#compassBtn').onclick=()=>{ if(cam==='driver') setCam('follow'); map&&map.easeTo({bearing:0,pitch:0,duration:500}); };
+$('#tiltBtn').onclick=()=>{ if(!map) return; const p=map.getPitch()>10?0:55; map.easeTo({pitch:p,duration:500}); };
+$('#layersBtn').onclick=()=>{ $('#layersMenu').hidden=!$('#layersMenu').hidden; };
+document.querySelectorAll('[data-style]').forEach(b=>{ b.setAttribute('aria-pressed',b.dataset.style===styleName); b.onclick=()=>{ setStyle(b.dataset.style); $('#layersMenu').hidden=true; }; });
+$('#locBtn').onclick=()=>{ if(!navigator.geolocation){toast('This browser has no GPS access.');return;} toast('Finding your location…',2500);
+  navigator.geolocation.getCurrentPosition(p=>{ const ll=[p.coords.longitude,p.coords.latitude]; markers.me.setLngLat(ll).addTo(map); setCam('free'); map.easeTo({center:ll,zoom:16,duration:800}); },
+    e=>toast(e.code===1?'Location permission was refused. Allow location for this site in your browser settings.':'Couldn’t get your location.'),{enableHighAccuracy:true,timeout:15000}); };
+$('#themeBtn').onclick=()=>{ const r=document.documentElement, dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme=dark?'light':'dark'; store.set('trackreplay.theme',r.dataset.theme); readTokens(); refreshTrackData(); need=true;
+  if((r.dataset.theme==='dark')!==(styleName==='dark')&&styleName!=='satellite') setStyle(r.dataset.theme==='dark'?'dark':'streets'); };
+{ const th=store.get('trackreplay.theme'); if(th) { document.documentElement.dataset.theme=th; readTokens(); } }
+$('#pillTitle').onclick=()=>{ showTab('tracks'); expandSheet(); };
+// sheet
+const sheet=$('#sheet');
+function expandSheet(){ sheet.classList.add('open'); syncSheet(); }
+function collapseSheet(){ sheet.classList.remove('open'); syncSheet(); }
+function syncSheet(){ requestAnimationFrame(()=>{ const h=innerWidth>=900?0:sheetH(); document.documentElement.style.setProperty('--sheet-h',h+'px'); $('#moreBtn').textContent=sheet.classList.contains('open')?'Less':'More'; need=true; updateUI(); }); }
+$('#moreBtn').onclick=()=>sheet.classList.contains('open')?collapseSheet():expandSheet();
+{ let y0=null; const h=$('#handle');
+  h.addEventListener('pointerdown',e=>{y0=e.clientY;h.setPointerCapture(e.pointerId);});
+  h.addEventListener('pointerup',e=>{ if(y0==null) return; const dy=e.clientY-y0; y0=null; if(dy<-25) expandSheet(); else if(dy>25) collapseSheet(); else sheet.classList.contains('open')?collapseSheet():expandSheet(); });
+  h.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); sheet.classList.contains('open')?collapseSheet():expandSheet(); } }); }
+new ResizeObserver(syncSheet).observe(sheet);
+addEventListener('resize',syncSheet);
+// files
+$('#file').onchange=e=>{ importFiles([...e.target.files]); e.target.value=''; };
+document.querySelector('label[for=file]').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#file').click();} });
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{ if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){ e.preventDefault(); $('#drop').classList.add('over'); } }));
+document.addEventListener('dragleave',e=>{ if(!e.relatedTarget) $('#drop').classList.remove('over'); });
+document.addEventListener('drop',e=>{ $('#drop').classList.remove('over'); if(e.dataTransfer&&e.dataTransfer.files.length){ e.preventDefault(); showTab('tracks'); expandSheet(); importFiles([...e.dataTransfer.files]); } });
+document.addEventListener('keydown',e=>{ if(e.target.closest('input,select,textarea')) return; const k=e.key;
+  if(k===' '){e.preventDefault();$('#tPlay').click();} else if(k==='ArrowRight'||k==='ArrowLeft'){e.preventDefault();tc=Math.max(0,Math.min(duration(),tc+(k==='ArrowRight'?1:-1)*(e.shiftKey?30:5)));need=true;}
+  else if(k==='r'||k==='R'){ playing&&dir<0?play(1):play(-1); } else if(k==='Escape'&&drawing) stopDrawing(); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readTokens();refreshTrackData();need=true;});
+
+function onTracksChanged(refit){ tc=Math.min(tc,duration()); renderList(); renderTrip(); renderCompare(); updateEstimate(); updatePill(); refreshTrackData(); need=true; updateUI();
+  if(refit&&mapReady){ fitTracks(); setTimeout(()=>{ if(cam!=='free') setCam(cam); },700); } }
+
+/* ================= boot ================= */
+function decodeSample(s){ const segs=s.segs.map(a=>{const o=[];let p=[0,0,0,0];for(let i=0;i<a.length;i+=4){p=[p[0]+a[i],p[1]+a[i+1],p[2]+a[i+2],p[3]+a[i+3]];o.push([p[0]/1000,p[1]/1e6,p[2]/1e6,p[3]/10]);}return o;});
+  return {id:'mytracks-2013-12-29',name:'Luanda drive · 29 Dec 2013',start:s.start.replace(/(\.\d{3})\d*Z$/,'$1Z'),tz:60,segs,builtin:true,color:PALETTE[0],source:'Google My Tracks · KMZ'}; }
+if(window.SAMPLE_TRACK) tracks.push(build(decodeSample(window.SAMPLE_TRACK)));
+const saved=store.get('trackreplay.v2'); if(saved&&Array.isArray(saved.tracks)) saved.tracks.forEach(r=>{ try{ const t=build(r); if(t.pts.length>1) tracks.push(t); }catch(e){} });
+A=(saved&&byId(saved.A))?saved.A:(tracks[0]&&tracks[0].id); B=(saved&&byId(saved.B)&&saved.B!==A)?saved.B:null;
+initMap(); setPlaying(false); onTracksChanged(false); syncSheet();
+if(map) map.once('style.load',()=>{ fitTracks(); setTimeout(()=>{ setCam('follow'); map.easeTo({zoom:15.5,duration:800}); },900); });
+requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
+</script>
+</body>
+</html>
