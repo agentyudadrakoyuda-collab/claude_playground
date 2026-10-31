@@ -340,18 +340,20 @@ function timeStep(t){return [1,2,5,10,15,30,60,120,300,600,900,1800,3600,7200].f
 let tracks=[],A=null,B=null; const byId=id=>tracks.find(t=>t.id===id);
 function build(raw){
   const pts=[]; let d=0;
-  raw.segs.forEach((s,si)=>{ let last=null;
-    for(const p of s){ const [t,lon,lat,alt]=p; if(!isFinite(t)||!isFinite(lon)||!isFinite(lat)) continue;
+  let segN=-1;
+  raw.segs.forEach(s=>{ let last=null; segN++;
+    for(const p of s){ const [t,lon,lat,alt]=p; if(!isFinite(t)||!isFinite(lon)||!isFinite(lat)) continue; let gap=false;
       if(last){ const dt=t-last.t; if(dt<0.5) continue; const dd=hav(last.lon,last.lat,lon,lat);
-        if(dd/dt>70) continue;
-        if(dd<2){ pts.push(last={...last,t,alt:alt??last.alt}); continue; }
-        d+=dd; }
-      pts.push(last={t,lon,lat,alt:(alt==null||!isFinite(alt))?null:alt,d,seg:si}); } });
+        if(dt>60&&dd>300){ segN++; gap=true; d+=dd; } // GPS stopped for a while (screen off, tunnel): start a new piece
+        else { if(dd/dt>70) continue;
+          if(dd<2){ pts.push(last={...last,t,alt:alt??last.alt,gap:false}); continue; }
+          d+=dd; } }
+      pts.push(last={t,lon,lat,alt:(alt==null||!isFinite(alt))?null:alt,d,seg:segN,gap}); } });
   for(let i=0,j=0,k=0;i<pts.length;i++){ const p=pts[i]; while(pts[j].seg!==p.seg) j++; while(j<i&&pts[j+1].t<=p.t-4) j++;
     if(k<i) k=i; while(k+1<pts.length&&pts[k].t<p.t+4&&pts[k+1].seg===p.seg) k++; const dt=pts[k].t-pts[j].t; p.v=dt>=3?(pts[k].d-pts[j].d)/dt:(i?pts[i-1].v:0); }
   const vr=pts.map(p=>p.v); for(let i=0;i<pts.length;i++){const w=[];for(let j=Math.max(0,i-4);j<=Math.min(pts.length-1,i+4);j++) if(pts[j].seg===pts[i].seg) w.push(vr[j]); w.sort((x,y)=>x-y); pts[i].v=w[w.length>>1];}
   let moving=0,stops=0,still=0,fast=0,gain=0,maxV=0,minAlt=Infinity,maxAlt=-Infinity;
-  for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i]; if(a.seg!==b.seg) continue; const dt=b.t-a.t,v=(b.d-a.d)/dt;
+  for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i]; if(a.seg!==b.seg&&!b.gap) continue; const dt=b.t-a.t,v=(b.d-a.d)/dt;
     if(v>0.6){moving+=dt;if(still>=10)stops++;still=0;}else still+=dt; if(b.v>=80/3.6) fast+=dt;}
   pts.forEach(p=>{if(p.v>maxV)maxV=p.v;});
   let prev=null; for(let i=0;i<pts.length;i++){let s=0,n=0;for(let j=Math.max(0,i-6);j<=Math.min(pts.length-1,i+6);j++) if(pts[j].alt!=null){s+=pts[j].alt;n++;}
@@ -455,7 +457,7 @@ const STYLES={
   streets:'https://tiles.openfreemap.org/styles/liberty',
   light:'https://tiles.openfreemap.org/styles/positron',
   satellite:rasterStyle('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','Imagery © Esri, Maxar, Earthstar Geographics',19),
-  dark:rasterStyle('https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png','© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © CARTO',20),
+  dark:'https://tiles.openfreemap.org/styles/dark',
   osm:rasterStyle('https://tile.openstreetmap.org/{z}/{x}/{y}.png','© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',19)
 };
 let styleName=store.get('trackreplay.style')||'streets', map=null, mapReady=false;
@@ -476,7 +478,9 @@ function initMap(){
     markers[r]=new maplibregl.Marker({element:el,rotationAlignment:'map',pitchAlignment:'map'}).setLngLat([0,0]); });
   const me=document.createElement('div'); me.className='me'; markers.me=new maplibregl.Marker({element:me}).setLngLat([0,0]);
 }
+let styleTimer=null;
 function setStyle(name){ styleName=name; store.set('trackreplay.style',name==='osm'?'streets':name); mapReady=false; map.setStyle(STYLES[name]);
+  clearTimeout(styleTimer); if(name!=='osm') styleTimer=setTimeout(()=>{ if(!mapReady&&styleName===name){ toast('That map type didn’t load, so the street map is shown instead.'); setStyle(name==='streets'?'osm':'streets'); } },9000);
   document.querySelectorAll('[data-style]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.style===name)); }
 const emptyFC={type:'FeatureCollection',features:[]};
 function addLayers(){
@@ -486,6 +490,7 @@ function addLayers(){
     add(r+'-casing',r,{'line-color':'#ffffff','line-width':['interpolate',['linear'],['zoom'],10,5,16,12],'line-opacity':.95},round);
     add(r+'-line',r,{'line-color':tok['--'+r.toLowerCase()],'line-width':['interpolate',['linear'],['zoom'],10,3,16,8]},round);
     add(r+'-passed',r+'p',{'line-color':'#7d8590','line-width':['interpolate',['linear'],['zoom'],10,3,16,8],'line-opacity':.8},round);
+    add(r+'-gap',r+'g',{'line-color':'#ffffff','line-width':['interpolate',['linear'],['zoom'],10,3,16,8],'line-dasharray':[1,1.2]},{'line-join':'round'});
     add(r+'-ends',r+'e',{'circle-radius':6,'circle-color':['get','c'],'circle-stroke-color':'#fff','circle-stroke-width':2.5},{},'circle');
   }
   add('draft-casing','draft',{'line-color':'#fff','line-width':9},round);
@@ -494,6 +499,8 @@ function addLayers(){
   add('rec-line','rec',{'line-color':'#d93025','line-width':5},round);
 }
 function lineOf(tr){ return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:tr.pts.filter((p,i)=>i===0||p.lon!==tr.pts[i-1].lon||p.lat!==tr.pts[i-1].lat).map(p=>[p.lon,p.lat])}}; }
+// Where GPS stopped (screen off, tunnel), the line jumps; mark those jumps with a dashed line.
+function gapsOf(tr){ const f=[]; for(let i=1;i<tr.pts.length;i++){ const a=tr.pts[i-1],b=tr.pts[i]; if(a.seg!==b.seg&&hav(a.lon,a.lat,b.lon,b.lat)>300) f.push({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:[[a.lon,a.lat],[b.lon,b.lat]]}}); } return {type:'FeatureCollection',features:f}; }
 function gradientOf(tr,solid){
   if(solid) return ['interpolate',['linear'],['line-progress'],0,solid,1,solid];
   const coords=lineOf(tr).geometry.coordinates; const cum=[0]; for(let i=1;i<coords.length;i++) cum.push(cum[i-1]+hav(coords[i-1][0],coords[i-1][1],coords[i][0],coords[i][1]));
@@ -507,8 +514,8 @@ function shown(r){ if(drawing) return null; if(recording) return r==='A'&&rec&&r
 function refreshTrackData(){
   if(!mapReady) return; const comparing=!!shown('B');
   for(const r of ['A','B']){ const tr=shown(r), src=map.getSource(r);
-    if(!tr){ src.setData(emptyFC); map.getSource(r+'p').setData(emptyFC); map.getSource(r+'e').setData(emptyFC); markers[r].remove(); continue; }
-    src.setData(lineOf(tr)); map.setPaintProperty(r+'-line','line-gradient',gradientOf(tr,comparing||tr.synthetic?tok['--'+r.toLowerCase()]:null));
+    if(!tr){ src.setData(emptyFC); map.getSource(r+'p').setData(emptyFC); map.getSource(r+'g').setData(emptyFC); map.getSource(r+'e').setData(emptyFC); markers[r].remove(); continue; }
+    src.setData(lineOf(tr)); map.getSource(r+'g').setData(gapsOf(tr)); map.setPaintProperty(r+'-line','line-gradient',gradientOf(tr,comparing||tr.synthetic?tok['--'+r.toLowerCase()]:null));
     const f=tr.pts[0],l=tr.pts[tr.pts.length-1];
     map.getSource(r+'e').setData({type:'FeatureCollection',features:[{type:'Feature',properties:{c:'#188038'},geometry:{type:'Point',coordinates:[f.lon,f.lat]}},{type:'Feature',properties:{c:'#d93025'},geometry:{type:'Point',coordinates:[l.lon,l.lat]}}]});
     markers[r].addTo(map); }
@@ -751,23 +758,25 @@ $('#drawSave').onclick=()=>{ if(!draft) return; const name=$('#drawName').value.
 /* ================= GPS recording ================= */
 let recording=false, rec=null, watchId=null;
 $('#recStart').onclick=()=>{ if(!('geolocation' in navigator)){toast('This browser has no GPS access.');return;}
-  rec={t0:Date.now(),pts:[],dist:0,speed:0,pos:null,heading:null,ghost:$('#recGhost').checked&&!!byId(A)};
+  rec={t0:Date.now(),pts:[],segs:[[]],gaps:0,gapSec:0,hiddenAt:null,dist:0,speed:0,pos:null,heading:null,ghost:$('#recGhost').checked&&!!byId(A)};
   watchId=navigator.geolocation.watchPosition(onFix,err=>{ toast(err.code===1?'Location permission was refused. Allow location for this site in your browser settings, then try again.':'Waiting for a GPS signal…'); if(err.code===1) stopRecording(false); },{enableHighAccuracy:true,maximumAge:0,timeout:20000});
   recording=true; tc=0; setPlaying(false); $('#recBar').hidden=false; $('#pill').hidden=true; $('#nav').hidden=true; collapseSheet(); setCam('driver'); wakeLock(true); $('#recFab').classList.add('on'); refreshTrackData();
-  toast('Recording. Waiting for GPS…'); };
+  toast('Recording. Keep the screen on and this page open: phones stop GPS for web pages when the screen is off or another app is in front.',8000); };
 function onFix(p){ const c=p.coords, now=p.timestamp||Date.now(); const pt=[(now-rec.t0)/1000,c.longitude,c.latitude,c.altitude];
   if(c.accuracy>50&&rec.pts.length) return;
-  const lastP=rec.pts[rec.pts.length-1];
+  let lastP=rec.pts[rec.pts.length-1];
+  if(lastP&&pt[0]-lastP[0]>30){ rec.gaps++; rec.gapSec+=pt[0]-lastP[0]; rec.segs.push([]); lastP=null; } // GPS was paused: start a new piece instead of a straight jump
   if(lastP){ const d=hav(lastP[1],lastP[2],pt[1],pt[2]); if(d>2){ rec.dist+=d; rec.heading=c.heading!=null&&!isNaN(c.heading)&&c.speed>1?c.heading:bearing(lastP[1],lastP[2],pt[1],pt[2]); } }
   rec.speed=c.speed!=null&&!isNaN(c.speed)?c.speed:(lastP?hav(lastP[1],lastP[2],pt[1],pt[2])/Math.max(pt[0]-lastP[0],.5):0);
-  rec.pts.push(pt); rec.pos=pt; markers.me.setLngLat([pt[1],pt[2]]).addTo(map);
-  if(mapReady) map.getSource('rec').setData({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:rec.pts.length>1?rec.pts.map(q=>[q[1],q[2]]):[[pt[1],pt[2]],[pt[1],pt[2]]]}}); need=true; }
+  rec.pts.push(pt); rec.segs[rec.segs.length-1].push(pt); rec.pos=pt; markers.me.setLngLat([pt[1],pt[2]]).addTo(map);
+  if(mapReady) map.getSource('rec').setData({type:'Feature',properties:{},geometry:{type:'MultiLineString',coordinates:rec.segs.map(s=>s.length>1?s.map(q=>[q[1],q[2]]):[[pt[1],pt[2]],[pt[1],pt[2]]])}}); need=true; }
 $('#recStop').onclick=()=>stopRecording(true);
 function stopRecording(save){ if(watchId!=null) navigator.geolocation.clearWatch(watchId); watchId=null; recording=false; $('#recFab').classList.remove('on'); $('#recBar').hidden=true; $('#pill').hidden=false; markers.me.remove();
   if(mapReady) map.getSource('rec').setData(emptyFC); wakeLock(false); refreshTrackData();
   if(save){ if(!rec||rec.pts.length<5){ toast('Too few GPS points were recorded, so nothing was saved.'); }
     else { const t0=rec.t0, name='Recorded · '+new Date(t0).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
-      const raw={name,start:new Date(t0).toISOString(),tz:-new Date().getTimezoneOffset(),segs:[rec.pts.map(p=>[p[0],p[1],p[2],p[3]])],source:'Recorded with GPS in Track Replay'};
+      const raw={name,start:new Date(t0).toISOString(),tz:-new Date().getTimezoneOffset(),segs:rec.segs.filter(s=>s.length>1).map(s=>s.map(p=>[p[0],p[1],p[2],p[3]])),source:'Recorded with GPS in Track Replay',
+        note:rec.gaps?`GPS stopped ${rec.gaps} time${rec.gaps>1?'s':''} for ${fmtMin(rec.gapSec)} in total, usually because the screen turned off or another app was open. Those stretches are missing.`:null};
       try{ const tr=addTrack(raw,rec.ghost&&byId(A)?'B':'solo'); tc=0; onTracksChanged(true); showTab(byId(B)?'compare':'trip'); expandSheet(); toast(`Saved “${tr.name}”: ${km(tr.stats.dist)} km.`); }catch(e){ toast('The recording had no usable points.'); } } }
   rec=null; setCam('follow'); }
 
@@ -775,6 +784,11 @@ function stopRecording(save){ if(watchId!=null) navigator.geolocation.clearWatch
 $('#recFab').onclick=()=>{ if(recording) stopRecording(true); else $('#recStart').click(); };
 $('#clearMap').onclick=()=>{ A=null; B=null; setPlaying(false); tc=0; persist(); onTracksChanged(false); toast('Map cleared. Your tracks are still in the list.'); };
 $('#newBtn').onclick=()=>{ showTab('create'); expandSheet(); };
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ if(recording) rec.hiddenAt=Date.now(); wl=null; return; }
+  if(recording||playing) wakeLock(true); // the screen lock is released whenever the page is hidden
+  if(recording&&rec.hiddenAt){ const away=(Date.now()-rec.hiddenAt)/1000; rec.hiddenAt=null;
+    if(away>15) toast(`Recording was paused for ${fmtMin(away)} while this page wasn’t on screen. That stretch is missing. Keep the screen on to record without gaps.`,8000); } });
 let wl=null; async function wakeLock(on){ try{ if(on&&!wl&&navigator.wakeLock){ wl=await navigator.wakeLock.request('screen'); wl.addEventListener('release',()=>wl=null); } else if(!on&&wl){ await wl.release(); wl=null; } }catch(e){} }
 $('#tPlay').onclick=()=>{ if(recording) return; playing?setPlaying(false):play(dir>0||tc<=0?1:dir); };
 $('#tBack').onclick=()=>{ if(recording) return; playing&&dir<0?setPlaying(false):play(-1); };

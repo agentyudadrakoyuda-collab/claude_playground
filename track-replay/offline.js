@@ -6,18 +6,20 @@
 const OFFLINE = {
   ml: 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js',
   mlcss: 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css',
-  tile: (z, x, y) => `https://${'abcd'[(x + y) % 4]}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png`,
-  zmin: 11, zmax: 16, maxTiles: 3000
+  // OpenFreeMap: free vector map tiles, no key, open to offline use.
+  style: 'https://tiles.openfreemap.org/styles/liberty',
+  zmin: 10, zmax: 14, maxTiles: 1500,
+  glyphRanges: ['0-255', '256-511', '8192-8447']
 };
 
 function lon2tx(lon, z) { return Math.floor((lon + 180) / 360 * 2 ** z); }
 function lat2ty(lat, z) { const r = lat * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 2 ** z); }
 
 /** Tiles covering a corridor around the route at each zoom level. */
-function corridorTiles(coords) {
+function corridorTiles(coords, zmin, zmax) {
   const set = new Set();
-  for (let z = OFFLINE.zmin; z <= OFFLINE.zmax; z++) {
-    const buf = z >= 15 ? 1 : 2, tileM = 40075016 * Math.cos(coords[0][1] * Math.PI / 180) / 2 ** z;
+  for (let z = zmin; z <= zmax; z++) {
+    const buf = 1, tileM = 40075016 * Math.cos(coords[0][1] * Math.PI / 180) / 2 ** z;
     let lastKey = null;
     for (let i = 0; i < coords.length; i++) {
       const p = coords[i], q = coords[i + 1], samples = [p];
@@ -33,30 +35,66 @@ function corridorTiles(coords) {
 }
 
 function bytesToB64(buf) { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+async function getJSON(u) { const r = await fetch(u); if (!r.ok) throw new Error('http ' + r.status); return r.json(); }
+async function getB64(u) { const r = await fetch(u); if (!r.ok) throw new Error('http ' + r.status); return bytesToB64(await r.arrayBuffer()); }
+async function pool(items, n, fn) { let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < items.length) { const it = items[i++]; await fn(it); } })); }
+
+/** Font stacks used by a style's text layers. */
+function fontStacks(style) {
+  const out = new Set(), ops = new Set(['literal', 'step', 'match', 'case', 'coalesce', 'zoom', 'get', 'interpolate', 'linear']);
+  const walk = v => { if (!Array.isArray(v)) return; if (v.length && v.every(x => typeof x === 'string') && !ops.has(v[0])) out.add(v.join(',')); else v.forEach(walk); };
+  style.layers.forEach(l => walk(l.layout && l.layout['text-font']));
+  if (!out.size) out.add('Noto Sans Regular');
+  return [...out];
+}
 
 let offlineBusy = false;
 async function exportOffline(tr) {
   if (offlineBusy) { toast('An offline map is already being saved.'); return; }
   const coords = tr.pts.filter((p, i) => i === 0 || hav(p.lon, p.lat, tr.pts[i - 1].lon, tr.pts[i - 1].lat) >= 8 || i === tr.pts.length - 1).map(p => [+p.lon.toFixed(6), +p.lat.toFixed(6)]);
-  const tiles = corridorTiles(coords);
-  if (tiles.length > OFFLINE.maxTiles) { toast(`This route needs ${tiles.length} map tiles, more than one file can hold. Split it into shorter routes.`, 6000); return; }
   offlineBusy = true;
   try {
-    toast('Saving offline map: downloading the map engine…', 60000);
-    const [mljs, mlcss] = await Promise.all([fetch(OFFLINE.ml).then(r => { if (!r.ok) throw 0; return r.text(); }), fetch(OFFLINE.mlcss).then(r => { if (!r.ok) throw 0; return r.text(); })]);
-    const out = {}; let done = 0, failed = 0, i = 0;
-    const worker = async () => {
-      while (i < tiles.length) {
-        const key = tiles[i++], [z, x, y] = key.split('/').map(Number);
-        try { const r = await fetch(OFFLINE.tile(z, x, y)); if (!r.ok) throw 0; out[key] = bytesToB64(await r.arrayBuffer()); } catch (e) { failed++; }
-        done++; if (done % 10 === 0 || done === tiles.length) toast(`Saving offline map: ${done} of ${tiles.length} map tiles…`, 60000);
-      }
-    };
-    await Promise.all(Array.from({ length: 8 }, worker));
-    if (failed > tiles.length * 0.5) throw new Error('tiles');
+    toast('Saving offline map: downloading the map style…', 60000);
+    const [mljs, mlcss, style] = await Promise.all([
+      fetch(OFFLINE.ml).then(r => { if (!r.ok) throw 0; return r.text(); }),
+      fetch(OFFLINE.mlcss).then(r => { if (!r.ok) throw 0; return r.text(); }),
+      getJSON(OFFLINE.style)]);
+    // Keep the vector street layers; drop extra raster sources (relief shading) that would need more downloads.
+    const vec = Object.entries(style.sources).find(([, s]) => s.type === 'vector');
+    if (!vec) throw new Error('style');
+    const [srcName, src] = vec, tj = src.url ? await getJSON(src.url) : src;
+    const tmpl = tj.tiles[0], vmax = Math.min(tj.maxzoom ?? 14, OFFLINE.zmax);
+    for (const k of Object.keys(style.sources)) if (k !== srcName) delete style.sources[k];
+    style.layers = style.layers.filter(l => !l.source || l.source === srcName);
+    style.sources[srcName] = { type: 'vector', tiles: ['off://v/{z}/{x}/{y}'], minzoom: 0, maxzoom: vmax, attribution: tj.attribution || src.attribution || '© OpenMapTiles © OpenStreetMap contributors' };
+    const assets = { v: {}, g: {}, s: {} };
+    // street tiles along the route
+    const tiles = corridorTiles(coords, OFFLINE.zmin, vmax);
+    if (tiles.length > OFFLINE.maxTiles) { toast(`This route needs ${tiles.length} map tiles, more than one file can hold. Split it into shorter routes.`, 6000); return; }
+    let done = 0, failed = 0;
+    await pool(tiles, 8, async key => {
+      const [z, x, y] = key.split('/');
+      try { assets.v[key] = await getB64(tmpl.replace('{z}', z).replace('{x}', x).replace('{y}', y)); } catch (e) { failed++; }
+      done++; if (done % 5 === 0 || done === tiles.length) toast(`Saving offline map: ${done} of ${tiles.length} map tiles…`, 60000);
+    });
+    if (failed > tiles.length * 0.3) throw new Error('tiles');
+    // label fonts
+    if (style.glyphs) {
+      const jobs = []; fontStacks(style).forEach(fs => OFFLINE.glyphRanges.forEach(r => jobs.push([fs, r])));
+      await pool(jobs, 6, async ([fs, r]) => { try { assets.g[fs + '/' + r] = await getB64(style.glyphs.replace('{fontstack}', encodeURIComponent(fs)).replace('{range}', r)); } catch (e) {} });
+      style.glyphs = 'off://g/{fontstack}/{range}';
+    }
+    // map icons
+    const spriteUrl = Array.isArray(style.sprite) ? (style.sprite[0] && style.sprite[0].url) : style.sprite;
+    if (spriteUrl) {
+      try {
+        const [j1, p1, j2, p2] = await Promise.all([getJSON(spriteUrl + '.json'), getB64(spriteUrl + '.png'), getJSON(spriteUrl + '@2x.json'), getB64(spriteUrl + '@2x.png')]);
+        assets.s = { 'sprite.json': j1, 'sprite.png': p1, 'sprite@2x.json': j2, 'sprite@2x.png': p2 }; style.sprite = 'off://s/sprite';
+      } catch (e) { delete style.sprite; style.layers = style.layers.filter(l => !(l.layout && l.layout['icon-image'])); }
+    }
     const steps = (tr.navSteps || []).map(s => ({ lon: s.lon, lat: s.lat, type: s.type, mod: s.mod, exit: s.exit, name: s.name }));
-    const data = { name: tr.name, coords, steps, avg: tr.stats.avgMoving || 11, zmin: OFFLINE.zmin, zmax: OFFLINE.zmax, made: new Date().toISOString().slice(0, 10) };
-    const html = guestHTML(data, out, mljs, mlcss);
+    const data = { name: tr.name, coords, steps, avg: tr.stats.avgMoving || 11, zmin: OFFLINE.zmin, style, made: new Date().toISOString().slice(0, 10) };
+    const html = guestHTML(data, assets, mljs, mlcss);
     const blob = new Blob([html], { type: 'text/html' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = (tr.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'route') + '-offline-map.html';
@@ -77,7 +115,7 @@ function guestHTML(data, tiles, mljs, mlcss) {
     '<style>' + mlcss + '</style><style>' + GUEST_CSS + '</style></head><body>' +
     GUEST_BODY.replace('{{TITLE}}', title) +
     '<script>' + mljs.replace(/<\/script/gi, '<\\/script') + '<\/script>' +
-    '<script>const DATA=' + safeJSON(data) + ';const TILES=' + safeJSON(tiles) + ';(' + guestRuntime.toString() + ')();<\/script>' +
+    '<script>const DATA=' + safeJSON(data) + ';const ASSETS=' + safeJSON(tiles) + ';(' + guestRuntime.toString() + ')();<\/script>' +
     '</body></html>';
 }
 
@@ -113,7 +151,7 @@ const GUEST_BODY = `
   <div class="note" id="note">This map works without internet. Allow location when asked to see where you are.</div>
 </div>`;
 
-/* Runs inside the exported file. Self-contained: uses only DATA, TILES and maplibregl. */
+/* Runs inside the exported file. Self-contained: uses only DATA, ASSETS and maplibregl. */
 function guestRuntime() {
   const D2R = Math.PI / 180, $ = s => document.querySelector(s);
   const hav = (a, b, c, d) => { const p = b * D2R, q = d * D2R, h = Math.sin((q - p) / 2) ** 2 + Math.cos(p) * Math.cos(q) * Math.sin((c - a) * D2R / 2) ** 2; return 2 * 6371008.8 * Math.asin(Math.sqrt(h)); };
@@ -157,19 +195,20 @@ function guestRuntime() {
   };
   function banner(cls, ico, d, t) { const b = $('#banner'); b.className = 'banner ' + cls; $('#ico').innerHTML = ico; $('#bd').textContent = d; $('#bt').textContent = t; }
 
-  // offline tiles through a custom protocol
-  const blank = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='), c => c.charCodeAt(0));
+  // offline map data through a custom protocol: v = street tiles, g = label fonts, s = icons
+  const b64buf = b => { const bin = atob(b), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
   maplibregl.addProtocol('off', async p => {
-    const b = TILES[p.url.slice(6)]; if (!b) return { data: blank.slice().buffer };
-    const bin = atob(b), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return { data: u.buffer };
+    const path = decodeURIComponent(p.url.slice(6)), kind = path[0], key = path.slice(2);
+    if (kind === 's') { const v = ASSETS.s[key]; if (v == null) throw new Error('missing'); return { data: key.endsWith('.json') ? v : b64buf(v) }; }
+    const b = kind === 'v' ? ASSETS.v[key] : ASSETS.g[key.replace(/\.pbf$/, '')];
+    return { data: b ? b64buf(b) : new ArrayBuffer(0) };
   });
   prep();
   let w = 180, e = -180, s = 90, n = -90; route.forEach(c => { w = Math.min(w, c[0]); e = Math.max(e, c[0]); s = Math.min(s, c[1]); n = Math.max(n, c[1]); });
   const bounds = [[w, s], [e, n]];
   const map = new maplibregl.Map({
     container: 'map', bounds, fitBoundsOptions: { padding: { top: 110, bottom: 190, left: 40, right: 40 } }, maxZoom: 19, minZoom: DATA.zmin - 1, attributionControl: { compact: true }, maxPitch: 65,
-    style: { version: 8, sources: { t: { type: 'raster', tiles: ['off://{z}/{x}/{y}'], tileSize: 256, minzoom: DATA.zmin, maxzoom: DATA.zmax, attribution: '© OpenStreetMap contributors © CARTO' } },
-      layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#eef0f2' } }, { id: 't', type: 'raster', source: 't' }] }
+    style: DATA.style
   });
   const meEl = document.createElement('div'); meEl.className = 'me';
   meEl.innerHTML = '<svg width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#fff"/><path d="M17 5 L26 27 L17 22 L8 27 Z" fill="#1a73e8"/></svg>';
