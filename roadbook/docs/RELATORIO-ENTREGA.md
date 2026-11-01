@@ -84,11 +84,16 @@ Testes adicionais que passam: KMZ com dois trajectos e escolha (R-S1, R-S2); HEI
 
 ## 7. Ficheiros a carregar no Drive (pasta "Roadbook v1 · Brief Drako (2026-11-01)")
 
-- `dist/roadbook-studio.html`
-- `dist/exemplo-navigator-marca-ficticia.html`
-- `dist/chegar-a-meraki-v4.html`
-- `dist/chegar-a-meraki.roadbook`
-- `dist/chegar-a-meraki-pontos.gpx`
+Carregados pelo conector do Drive nesta sessão (ficheiros de texto):
+
 - `docs/guia-de-captacao.md`
-- `docs/guia-de-captacao.pdf`
 - `docs/RELATORIO-ENTREGA.md`
+
+O conector só aceita o conteúdo dentro do pedido; os ficheiros abaixo são grandes ou binários e não passaram. Carregar à mão a partir do ramo `ccr-7e877c4e-7ct09x` do repositório `agentyudadrakoyuda-collab/claude_playground`, pasta `roadbook/`:
+
+- `dist/roadbook-studio.html` (1,07 MB)
+- `dist/exemplo-navigator-marca-ficticia.html` (1,0 MB)
+- `dist/chegar-a-meraki-v4.html` (1,15 MB)
+- `dist/chegar-a-meraki.roadbook` (0,27 MB)
+- `dist/chegar-a-meraki-pontos.gpx` (0,10 MB)
+- `docs/guia-de-captacao.pdf` (31 kB)
