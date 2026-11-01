@@ -7,6 +7,8 @@ const $=s=>document.querySelector(s);
 const km=v=>v.toLocaleString('pt-PT',{minimumFractionDigits:1,maximumFractionDigits:1});
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const phrase=(/^chegar\s+(.+)$/i.exec(RB.title)||[])[1]||('a '+RB.place);
+const untilTxt=/^a\s/.test(phrase)?'até '+phrase.slice(2):'até '+phrase;
+RB.until=untilTxt;
 
 const STEPS=RB.steps, N=STEPS.length-1, IMG=RB.img, TRIG=RB.trig;
 document.title=RB.title;
@@ -95,7 +97,7 @@ function render(){
   if(s.intro){
     c.innerHTML=`<h2>Antes de sair</h2>
       <ul class="facts"><li><small>Percurso</small><b>${km(RB.totalKm)} km</b></li><li><small>Tempo</small><b>~${RB.mins} min</b></li><li><small>Pontos</small><b>${N}</b></li></ul>
-      ${RB.welcome?`<p class="welcome">${RB.welcome}</p>`:''}
+      ${RB.welcome?`<p class="txt welcome">${RB.welcome}</p>`:''}
       ${RB.before?`<p class="note">${RB.before}</p>`:''}
       <button class="save" id="save" type="button" hidden>Guardar no telemóvel</button>
       <div class="d3card"><button type="button" id="intro3d">Ver o percurso em 3D</button><p>Para conhecer o caminho em casa: relevo, sobrevoo e as fotos de cada ponto.</p><small>Melhor em casa, com rede.</small></div>
@@ -111,7 +113,7 @@ function render(){
     const nx=STEPS[cur+1];
     c.innerHTML=`${offHtml()}<div class="km">${kmTxt}${leftTxt}</div><h2>${esc(s.title)}</h2><p class="txt">${s.text}</p>
       ${s.img?`<figure><button type="button" data-img="${s.img}" aria-label="Ampliar foto"><img src="${IMG[s.img]}" alt="${esc(s.cap)}"></button><figcaption>${esc(s.cap)}</figcaption></figure>`:''}
-      ${nx?`<p class="next">A seguir, ${nx.home?'perto do':'ao'} km ${km(nx.a)}: <b>${esc(nx.title)}</b></p>`:`${contactHtml()}<p class="next">Percurso gravado a ${dateTxt()}, da estrada até ${esc(RB.place)}.</p>`}`;
+      ${nx?`<p class="next">A seguir, ${nx.home?'perto do':'ao'} km ${km(nx.a)}: <b>${esc(nx.title)}</b></p>`:`${contactHtml()}<p class="next">Percurso gravado a ${dateTxt()}, da estrada ${esc(untilTxt)}.</p>`}`;
     const fb=c.querySelector('[data-img]'); if(fb) fb.onclick=()=>{$('#boxImg').src=IMG[fb.dataset.img];$('#box').hidden=false;};
   }
   wireCopy(c);

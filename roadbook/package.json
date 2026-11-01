@@ -6,7 +6,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "node build/build.js",
-    "test:unit": "node --test tests/unit/",
+    "test:unit": "node --test tests/unit/*.test.js",
     "test:e2e": "node tests/e2e/run.js",
     "test": "npm run build && npm run test:unit && npm run test:e2e"
   },

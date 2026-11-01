@@ -199,7 +199,7 @@
         kind: p.kind, maneuver: maneuverOf(p), confirm: p.conf !== 'alta', conf: p.conf, why: p.why || [],
         lat: +geo.lat.toFixed(6), lon: +geo.lon.toFixed(6), photo: null, caption: '', notes: noteKinds(p)
       };
-      const tx = texts(p, next, place, total, tr);
+      const tx = texts(p, next, place, total, tr, opts.placePhrase || ('a ' + place));
       pt.title = title40(tx.title); pt.text = tx.text.slice(0, 220);
       pt.trigger_km = +(k === 0 ? -1 : (p.kind === 'manobra' || p.kind === 'chegada' ? Math.max(0, p.a - CFG.trigBefore) : p.a) / 1000).toFixed(2);
       return pt;
@@ -219,7 +219,7 @@
     if (s.length === 1) return s[0] === 'esquerda' ? 'Vire à esquerda' : 'Vire à direita';
     return (s[0] === 'esquerda' ? 'Vire à esquerda' : 'Vire à direita') + (s[1] === s[0] ? ' e logo de novo à ' + s[1] : ' e logo à ' + s[1]);
   }
-  function texts(p, next, place, total, tr) {
+  function texts(p, next, place, total, tr, phrase) {
     const dNext = next ? Math.max(0, next.a - p.b) : 0;
     const tail = next ? (dNext < 50 && next.kind !== 'chegada' ? ' O próximo ponto vem logo a seguir.' : next.kind === 'chegada' ? ` Daqui à chegada são ${km(dNext)} km.` : ` Próximo ponto daqui a ${km(dNext)} km.`) : '';
     const ref = p.ref ? ` Junto a ${p.ref}.` : '';
@@ -236,7 +236,7 @@
       case 'inicio': return { title: 'Saída do asfalto', text: `Km 0,0. Saia do asfalto e entre na picada: vire à esquerda.${ref}${tail}` };
       case 'chegada': {
         const before = p.parts.filter(x => x.kind === 'manobra').map(x => sidesTxt(x.sides).toLowerCase()).join(', depois ');
-        return { title: `Chegada: ${place}`, text: `Km ${km(total)}.${before ? ' Antes de chegar, ' + before + '.' : ''} Chegou a ${place}. Bem-vindos!` };
+        return { title: `Chegada: ${place}`, text: `Km ${km(total)}.${before ? ' Antes de chegar, ' + before + '.' : ''} Chegou ${phrase}. Bem-vindos!` };
       }
       case 'manobra': return { title: sidesTxt(p.sides), text: `Km ${km(p.a)}. ${sidesTxt(p.sides)}.${ref}${ex}${tail}` };
       case 'troco': {

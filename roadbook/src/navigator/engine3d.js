@@ -894,7 +894,7 @@ function frame(){
   if(st.theme==='holo'&&ensureComposer()) composer.render(dt); else renderer.render(scene,camera);
 }
 
-try{ load(window.RB.gpx,'Da estrada até '+window.RB.place); }catch(e){ showToast(e.message); }
+try{ load(window.RB.gpx,'Da estrada '+(window.RB.until||('até '+window.RB.place))); }catch(e){ showToast(e.message); }
 resize(); frame();
 };
 

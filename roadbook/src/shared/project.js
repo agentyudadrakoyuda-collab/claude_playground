@@ -112,8 +112,8 @@
     const slow = pts.filter(pt => pt.kind === 'lento' || (pt.notes || []).includes('lento'));
     return {
       v: 1, title: p.brand.title || ('Chegar a ' + place), place, logo: p.brand.logo || '', phone: p.brand.phone || '',
-      pal, credit: !!p.brand.credit, welcome: p.texts.welcome, before: p.texts.before,
-      notes: (p.texts.notes && p.texts.notes.length ? p.texts.notes : slow.map(pt => `Ao km ${G.fmtKm(pt.km_a * 1000)} há um troço lento (ponte, buraco ou areia). É normal, siga devagar.`)),
+      pal, credit: !!p.brand.credit, welcome: rich(p.texts.welcome), before: rich(p.texts.before),
+      notes: (p.texts.notes && p.texts.notes.length ? p.texts.notes : slow.map(pt => `Ao km ${G.fmtKm(pt.km_a * 1000)} há um troço lento (ponte, buraco ou areia). É normal, siga devagar.`)).map(rich),
       totalKm: +(total / 1000).toFixed(2), mins, steps, trig, trk, road: p.road || [], roadLabels: p.roadLabels || ['', ''],
       img, gpx: toGPX(p, tr), recorded: p.recorded || (tr.pts[0].t ? new Date(tr.pts[0].t).toISOString().slice(0, 10) : ''),
       key: 'rb-' + hashStr(place + total.toFixed(0))
