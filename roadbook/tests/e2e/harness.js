@@ -14,7 +14,7 @@ async function openPage(browser, url, opts = {}) {
   return { ctx, page, errors };
 }
 async function run(filter) {
-  const browser = await chromium.launch(); const results = [];
+  const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const results = [];
   for (const t of tests) {
     if (filter && !t.name.includes(filter)) continue;
     const t0 = Date.now();

@@ -39,8 +39,11 @@
     }
     const list = [...bins.values()].map(e => ({ n: e.n, c: [e.r, e.g, e.b].map(v => v / (e.n ? (e.n / (1 + e.s * 2)) : 1)), s: e.s })).sort((a, b) => b.n - a.n);
     if (!list.length) return { primary: '#2f6b4a', accent: '#b0531f', fromLogo: false };
-    const prim = list[0].c, [ph] = rgb2hsl(prim);
-    const acc = list.find(e => { const [h, s] = rgb2hsl(e.c); const dh = Math.min(Math.abs(h - ph), 1 - Math.abs(h - ph)); return dh > 0.08 && s > 0.2; }) || list.find(e => Math.abs(rgb2hsl(e.c)[2] - rgb2hsl(prim)[2]) > 0.2) || list[0];
+    const chroma = c => (Math.max(...c) - Math.min(...c)) / 255;
+    const vivid = list.filter(e => chroma(e.c) > 0.25), base = vivid.length ? vivid : list;
+    const prim = base[0].c, [ph, , pl] = rgb2hsl(prim);
+    const acc = base.find(e => { const [h] = rgb2hsl(e.c); const dh = Math.min(Math.abs(h - ph), 1 - Math.abs(h - ph)); return dh > 0.08; })
+      || base.find(e => Math.abs(rgb2hsl(e.c)[2] - pl) > 0.04) || base[0];
     return { primary: rgb2hex(prim), accent: rgb2hex(acc.c), fromLogo: true };
   }
   /* Paleta final do Navigator nos dois temas. Os textos sobre fundos cumprem 4,5:1. */
@@ -63,7 +66,8 @@
   }
   function passes(primary, accent) {
     const p = palette(primary, accent);
-    const exact = ['light', 'dark'].every(th => { const B = BG[th]; return contrast(primary, B.bg) >= 4.5 && contrast(primary, B.surface) >= 4.5; });
+    /* a cor escolhida tem de passar tal como está no tema claro (o principal); o tema escuro usa sempre a variante calculada */
+    const exact = contrast(primary, BG.light.bg) >= 4.5 && contrast(primary, BG.light.surface) >= 4.5;
     return { palette: p, exact, ok: ['light', 'dark'].every(th => Object.values(p[th].ratios).every(r => r >= 4.5)) };
   }
   const api = { hex2rgb, rgb2hex, contrast, nearestPassing, extractColors, palette, passes, BG };

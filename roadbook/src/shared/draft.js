@@ -268,7 +268,9 @@
   function refreshTails(points) {
     points.forEach((p, k) => {
       const n = points[k + 1]; if (!p.text) return;
-      const base = p.text.replace(/ (Próximo ponto daqui a|Daqui à chegada são) [\d,]+ km\.| O próximo ponto vem logo a seguir\./, '');
+      const TAIL = / (Próximo ponto daqui a|Daqui à chegada são) [\d,]+ km\.| O próximo ponto vem logo a seguir\./;
+      if (!TAIL.test(p.text)) return; /* texto reescrito pelo André sem distância: não mexer */
+      const base = p.text.replace(TAIL, '');
       if (!n) { p.text = base; return; }
       const d = Math.max(0, n.km_a - p.km_b) * 1000;
       p.text = (base + (d < 50 && n.kind !== 'chegada' ? ' O próximo ponto vem logo a seguir.' : n.kind === 'chegada' ? ` Daqui à chegada são ${km(d)} km.` : ` Próximo ponto daqui a ${km(d)} km.`)).slice(0, 220);

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roadbook Studio</title>
+<meta name="generator" content="DrakoYuda Roadbook Studio v1">
+<style>
+/*@@FONTS@@*/
+/*@@STUDIO_CSS@@*/
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brandmark"><span class="mark" aria-hidden="true"></span><b>Roadbook Studio</b><small>DrakoYuda · uso interno</small></div>
+  <div class="bar-actions">
+    <button type="button" class="btn ghost" id="bNew">Novo</button>
+    <label class="btn ghost file">Abrir .roadbook<input type="file" id="fOpen" accept=".roadbook,application/json" hidden></label>
+    <button type="button" class="btn ghost" id="bSave">Guardar .roadbook</button>
+    <button type="button" class="btn ghost" id="bTheme" aria-label="Mudar tema claro ou escuro" title="Tema claro ou escuro">Tema</button>
+    <button type="button" class="btn ghost icon" id="bTour" aria-label="Rever a visita guiada" title="Visita guiada">?</button>
+  </div>
+</header>
+<p class="warn" id="privacy" role="note"></p>
+<div class="restore" id="restore" hidden><span>Há um trabalho gravado automaticamente neste computador.</span><button type="button" class="btn" id="bRestore">Recuperar</button><button type="button" class="btn ghost" id="bDiscard">Começar de novo</button></div>
+
+<div class="layout">
+  <aside class="side" id="side">
+    <!-- 1 · Percurso -->
+    <section class="panel" id="sTrack" data-tip="track">
+      <h2><span class="n">1</span>Percurso <button type="button" class="tipbtn" data-tipfor="track" aria-label="Dica">i</button></h2>
+      <p class="tip" data-tip-id="track" hidden>Largue aqui o GPX ou KML gravado com o GPS Logger, do asfalto até à porta. Pode largar também o logótipo (PNG ou SVG) e as fotos originais (JPEG). O rascunho aparece sozinho.<button type="button" class="tipok">Percebi</button></p>
+      <label class="drop" id="drop" tabindex="0">
+        <input type="file" id="fFiles" multiple accept=".gpx,.kml,.kmz,.jpg,.jpeg,.png,.svg,.heic,.heif,application/gpx+xml,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz,image/*" hidden>
+        <b>Largue os ficheiros aqui</b><span>GPX, KML ou KMZ · logótipo PNG ou SVG · fotos JPEG</span>
+      </label>
+      <div id="trackPick" hidden><label class="fld">Trajecto<select id="selTrack"></select></label></div>
+      <dl class="stats" id="stats" hidden>
+        <div><dt>Distância</dt><dd id="stDist">—</dd></div>
+        <div><dt>Tempo</dt><dd id="stTime">—</dd></div>
+        <div><dt>Subida</dt><dd id="stUp">—</dd></div>
+        <div><dt>Pontos do trajecto</dt><dd id="stN">—</dd></div>
+      </dl>
+      <div class="trim" id="trim" hidden>
+        <label class="fld">Cortar o início <output id="oTrimA">0 m</output><input type="range" id="rTrimA" min="0" max="1000" step="10" value="0"></label>
+        <label class="fld">Cortar o fim <output id="oTrimB">0 m</output><input type="range" id="rTrimB" min="0" max="1000" step="10" value="0"></label>
+        <button type="button" class="btn ghost" id="bRedraft">Refazer o rascunho com o corte</button>
+      </div>
+      <p class="status" id="osmStatus"></p>
+    </section>
+
+    <!-- 2 · Marca -->
+    <section class="panel" id="sBrand">
+      <h2><span class="n">2</span>Marca do anfitrião <button type="button" class="tipbtn" data-tipfor="brand" aria-label="Dica">i</button></h2>
+      <p class="tip" data-tip-id="brand" hidden>Obrigatório: nome do local, logótipo e contacto. As cores saem do logótipo. Se uma cor não passar o contraste de 4,5:1, use a sugestão: num carro em movimento, ler bem conta mais do que a cor exacta.<button type="button" class="tipok">Percebi</button></p>
+      <label class="fld">Nome do local<input id="iPlace" maxlength="40" autocomplete="off" placeholder="Ex.: Meraki"></label>
+      <label class="fld">Título do guia<input id="iTitle" maxlength="40" autocomplete="off" placeholder="Ex.: Chegar à Meraki"></label>
+      <div class="logo-row">
+        <div class="logo-box" id="logoBox"><span>Sem logótipo</span></div>
+        <label class="btn ghost file">Escolher logótipo<input type="file" id="fLogo" accept=".png,.svg,image/png,image/svg+xml" hidden></label>
+      </div>
+      <label class="fld">Contacto do anfitrião<input id="iPhone" inputmode="tel" maxlength="30" autocomplete="off" placeholder="+244 9xx xxx xxx"></label>
+      <div class="colors">
+        <label class="fld sw">Cor principal<input type="color" id="cPrim" value="#b0531f"></label>
+        <label class="fld sw">Cor de destaque<input type="color" id="cAcc" value="#c8652c"></label>
+      </div>
+      <p class="contrast" id="contrast"></p>
+      <div class="colors"><label class="fld">Estrada: ponta da esquerda<input id="iRoadL" maxlength="20" placeholder="Ex.: Luanda"></label><label class="fld">Ponta da direita<input id="iRoadR" maxlength="20" placeholder="Ex.: Caxito"></label></div>
+      <label class="switch"><input type="checkbox" id="tCredit"><span></span>Mostrar "Feito com DrakoYuda" no guia</label>
+      <details class="texts"><summary>Textos de boas-vindas (gerados)</summary>
+        <label class="fld">Boas-vindas<textarea id="tWelcome" rows="3" maxlength="400"></textarea></label>
+        <label class="fld">Antes de sair<textarea id="tBefore" rows="3" maxlength="400"></textarea></label>
+        <label class="fld">Notas (uma por linha)<textarea id="tNotes" rows="2" maxlength="600"></textarea></label>
+        <button type="button" class="btn ghost" id="bRegenTexts">Gerar de novo</button>
+      </details>
+    </section>
+
+    <!-- 3 · Fotos -->
+    <section class="panel" id="sPhotos">
+      <h2><span class="n">3</span>Fotos <button type="button" class="tipbtn" data-tipfor="photos" aria-label="Dica">i</button></h2>
+      <p class="tip" data-tip-id="photos" hidden>As fotos com GPS ou com hora ficam no sítio certo sozinhas. As fotos sem nada vão para a bandeja: arraste cada uma para o mapa. As fotos do WhatsApp perdem a hora e o GPS.<button type="button" class="tipok">Percebi</button></p>
+      <label class="fld inline">Fuso das fotos<select id="selTz"></select></label>
+      <div class="tray" id="tray" aria-label="Bandeja de fotos sem posição"></div>
+      <ul class="photos" id="photoList"></ul>
+    </section>
+
+    <!-- 4 · Pontos -->
+    <section class="panel" id="sPoints">
+      <h2><span class="n">4</span>Pontos <span class="count" id="pCount"></span> <button type="button" class="tipbtn" data-tipfor="points" aria-label="Dica">i</button></h2>
+      <p class="tip" data-tip-id="points" hidden>Confirme os pontos marcados "a confirmar". Pode corrigir, apagar, juntar ou arrastar pontos no mapa. Criar um ponto à mão é a excepção: um clique no trajecto.<button type="button" class="tipok">Percebi</button></p>
+      <div class="undo" id="undoBar" hidden><span id="undoTxt"></span><button type="button" class="btn ghost" id="bUndo">Anular</button></div>
+      <ol class="points" id="pointList"></ol>
+    </section>
+
+    <!-- 5 · Verificar e exportar -->
+    <section class="panel" id="sExport">
+      <h2><span class="n">5</span>Verificar e exportar <button type="button" class="tipbtn" data-tipfor="export" aria-label="Dica">i</button></h2>
+      <p class="tip" data-tip-id="export" hidden>A exportação fica bloqueada até a lista passar. O Navigator sai num só ficheiro HTML, com as fotos reduzidas e sem EXIF.<button type="button" class="tipok">Percebi</button></p>
+      <ul class="check" id="checklist"></ul>
+      <div class="exports">
+        <button type="button" class="btn primary" id="bExport" disabled>Exportar o Navigator</button>
+        <button type="button" class="btn ghost" id="bGpx">Exportar GPX</button>
+        <button type="button" class="btn ghost" id="bSave2">Guardar .roadbook</button>
+      </div>
+      <p class="status" id="exportStatus"></p>
+    </section>
+  </aside>
+
+  <section class="mapcol" aria-label="Mapa do trajecto">
+    <div class="maphead"><b>Mapa</b><span id="mapHint">Largue um GPX para começar.</span></div>
+    <div class="mapwrap" id="mapwrap">
+      <svg id="smap" role="img" aria-label="Mapa do trajecto com os pontos e as fotos"></svg>
+      <div class="legend"><span><i class="lg ok"></i>confirmado</span><span><i class="lg todo"></i>a confirmar</span><span><i class="lg ph"></i>foto</span></div>
+    </div>
+  </section>
+
+  <section class="previewcol" aria-label="Pré-visualização">
+    <div class="maphead"><b>Pré-visualização</b>
+      <div class="seg" role="group" aria-label="Tema da pré-visualização"><button type="button" data-pv="light" aria-pressed="true">Claro</button><button type="button" data-pv="dark" aria-pressed="false">Escuro</button></div>
+      <button type="button" class="btn ghost small" id="bSim">Simular GPS</button>
+    </div>
+    <div class="phone" id="phone"><iframe id="pv" title="Navigator em pré-visualização" sandbox="allow-scripts allow-same-origin"></iframe><p class="pv-empty" id="pvEmpty">O guia aparece aqui.</p></div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="tour" id="tour" hidden role="dialog" aria-modal="true" aria-labelledby="tourT">
+  <div class="tour-card"><small id="tourStep"></small><h3 id="tourT"></h3><p id="tourP"></p>
+    <div class="row"><button type="button" class="btn ghost" id="tourSkip">Saltar</button><button type="button" class="btn primary" id="tourNext">Seguinte</button></div></div>
+</div>
+
+<script>
+/*@@SHARED_JS@@*/
+</script>
+<script>
+/*@@NAV_TEMPLATE@@*/
+</script>
+<script>
+/*@@STUDIO_JS@@*/
+</script>
+</body>
+</html>
