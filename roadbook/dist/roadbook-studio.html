@@ -1193,6 +1193,8 @@ async function redraft() {
   const osm = await fetchOSM(TRK);
   if (osm && osm.road && osm.road.length > 1) { P.road = osm.road; P.roadLabels = osm.roadLabels || ['', '']; }
   if (P.road.length < 2) P.road = syntheticRoad(TRK);
+  /* a estrada fica de oeste para leste: a ponta da esquerda no mapa é a primeira */
+  if (P.road[0][1] > P.road[P.road.length - 1][1]) P.road.reverse();
   P.osm = osm ? { junctions: osm.junctions.length, refs: osm.refs.length } : null;
   const r = D.generate(TRK.pts, { placeName: P.brand.place || 'o destino', placePhrase: placePhrase(), osm: osm ? { junctions: osm.junctions, refs: osm.refs } : null });
   P.points = r.points; undoStack = []; $('#undoBar').hidden = true;
