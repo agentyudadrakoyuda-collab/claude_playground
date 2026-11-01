@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="generator" content="Roadbook Navigator v1">
+<title>@@TITLE@@</title>
+<style>
+/*@@FONTS@@*/
+/* base do contentor de artefactos: o mesmo do v3 quando aberto fora dele */
+:root{box-sizing:border-box}
+body{margin:0;padding:0}
+img{max-width:100%}
+[hidden]:not([hidden=until-found i]){display:none!important}
+</style>
+<style>
+/*@@GUIDE_CSS@@*/
+</style>
+<style>
+/* Roadbook: marca do anfitrião, "Faltam X km", aviso de desvio, contacto, crédito */
+.top .brand{display:flex;align-items:center;gap:10px;min-width:0}
+.top .brand img{height:30px;width:auto;max-width:96px;object-fit:contain;flex:none}
+.top h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.km .left{margin-left:auto;color:var(--muted);font-weight:500;font-size:14px}
+.km{display:flex;flex-wrap:wrap;width:100%}
+.offroute{margin:0;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--muted);font-size:16px}
+.offroute b{color:var(--ink)}
+.contact{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.contact small{width:100%;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.contact b{font-family:var(--f-km);font-size:20px;letter-spacing:.02em;user-select:all}
+.contact button{height:40px;padding:0 14px;border-radius:10px;border:2px solid var(--laterite);background:transparent;color:var(--laterite);font-weight:700;cursor:pointer}
+.d3card small{font-size:13px;color:var(--muted)}
+.credit{font-size:12px;color:var(--muted);margin:0;text-align:center}
+.welcome{margin:0;font-size:19px;max-width:60ch}
+.welcome strong,.note strong{color:var(--laterite)}
+@media (max-width:380px){.gnav button{font-size:18px}.top h1{font-size:18px}}
+</style>
+<style id="rb-brand">/*@@BRAND_CSS@@*/</style>
+</head>
+<body>
+<div class="app">
+  <header class="pad">
+    <div class="top"><div class="brand"><img id="logo" alt="" hidden><h1 id="title"></h1></div><span class="step" id="stepLbl"></span></div>
+    <div class="strip" id="strip" aria-label="Pontos do percurso, em quilómetros"><div class="rail"></div><div class="done" id="done"></div><div class="ends"><span>Estrada</span><span id="endKm"></span></div></div>
+  </header>
+
+  <div class="mapbox">
+    <svg id="map" role="img" aria-label="Mapa do percurso"></svg>
+    <span class="north" aria-hidden="true">N</span>
+    <button class="mapbtn d3" id="open3d" type="button" title="Vista 3D: melhor em casa, com rede">Ver em 3D</button>
+    <button class="mapbtn" id="gps" type="button"><i></i><span id="gpsLbl">A minha posição</span></button>
+  </div>
+
+  <main class="pad" id="card" aria-live="polite"></main>
+
+  <nav class="pad gnav">
+    <button id="prev" type="button">Anterior</button>
+    <button id="next" type="button">Começar</button>
+  </nav>
+</div>
+<div class="gtoast" id="gtoast" hidden></div>
+<div class="box" id="box" hidden><img id="boxImg" alt=""></div>
+
+<style>
+/*@@V3D_CSS@@*/
+</style>
+<!--@@V3D_HTML@@-->
+<script>/*@@RB@@*/</script>
+<!--@@VENDOR@@-->
+<script>
+/*@@ENGINE@@*/
+</script>
+<script>
+/*@@GUIDE_JS@@*/
+</script>
+</body>
+</html>

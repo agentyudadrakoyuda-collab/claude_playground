@@ -1,0 +1,110 @@
+<div id="v3d" hidden>
+  <canvas id="gl" aria-label="Mapa 3D do percurso"></canvas>
+
+  <section class="glass info" aria-label="Percurso">
+    <button class="card-head" id="infoToggle" aria-expanded="true" aria-controls="infoBody">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="titles"><b data-rb="title3d">3D</b><small id="routeName">A carregar…</small></span>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="card-body" id="infoBody">
+      <dl>
+        <dt>Distância</dt><dd id="sDist">—</dd>
+        <dt>Subida</dt><dd id="sUp">—</dd>
+        <dt>Alt. máx.</dt><dd id="sMax">—</dd>
+        <dt>Duração</dt><dd id="sTime">—</dd>
+      </dl>
+      <div class="legend" id="legend">—</div>
+    </div>
+  </section>
+
+  <nav class="rail" aria-label="Ferramentas">
+    <button class="ib back" id="close3d" type="button" aria-label="Voltar ao guia"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Guia</button>
+    <button class="ib" id="layersBtn" aria-expanded="false" aria-controls="sheet" title="Estilo, camadas e opções" aria-label="Estilo, camadas e opções"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></button>
+    <button class="ib" id="fsBtn" aria-pressed="false" title="Ecrã inteiro" aria-label="Ecrã inteiro"><svg viewBox="0 0 24 24" id="fsIcon"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button class="ib txt" id="helpBtn" title="Ajuda" aria-label="Mostrar ajuda">?</button>
+    <span class="sp"></span>
+    <button class="ib txt" id="zIn" title="Aproximar" aria-label="Aproximar">+</button>
+    <button class="ib txt" id="zOut" title="Afastar" aria-label="Afastar">−</button>
+  </nav>
+
+  <section class="glass sheet" id="sheet" hidden aria-label="Estilo, camadas e opções">
+    <div class="grp"><span class="lbl">Estilo</span>
+      <div class="seg" id="themes" role="group" aria-label="Estilo visual">
+        <button data-theme="natural" aria-pressed="true">Natural</button>
+        <button data-theme="holo" aria-pressed="false">Holograma</button>
+      </div>
+    </div>
+    <div class="grp"><span class="lbl">Superfície do terreno · satélite precisa de rede</span>
+      <div class="seg" id="surfaces" role="group" aria-label="Superfície do terreno">
+        <button data-surf="relevo" aria-pressed="true">Relevo</button>
+        <button data-surf="satelite" aria-pressed="false">Satélite</button>
+      </div>
+    </div>
+    <div class="grp"><span class="lbl">Camadas</span>
+      <button class="tg" id="layStreets" aria-pressed="false"><i></i>Ruas em 3D<small id="stStreets">OSM</small></button>
+      <button class="tg" id="layBuild" aria-pressed="false"><i></i>Edifícios em 3D<small id="stBuild">OSM</small></button>
+      <button class="tg" id="layPins" aria-pressed="true"><i></i>Pontos do guia<small id="stPins"></small></button>
+    </div>
+    <div class="grp row">
+      <button class="chip" id="osmBtn" title="Procurar locais e nomes de ruas no OpenStreetMap">Locais: —</button>
+      <button class="chip" id="introBtn">Rever abertura</button>
+    </div>
+    <p class="attr" id="attr"></p>
+  </section>
+
+  <div class="glass where" id="where" hidden></div>
+  <div class="glass hint" id="hint"></div>
+
+  <div class="glass stop" id="stop" hidden>
+    <button class="x" id="stopX" type="button" aria-label="Fechar">✕</button>
+    <img id="stopImg" alt="" hidden>
+    <div><b id="stopT"></b><p id="stopP"></p></div>
+  </div>
+
+  <div class="help" id="help" hidden>
+    <h3>Ver o percurso em 3D</h3>
+    <p>Para conhecer o caminho antes de sair. Na estrada, use o guia passo a passo.</p>
+    <ol>
+      <li><b>▶</b> percorre a rota, da estrada até <span data-rb="place"></span>.</li>
+      <li>Toque num <b>ponto numerado</b> (em baixo) para ver a foto e a indicação.</li>
+      <li><b>Câmara</b>: Geral para ver tudo, Seguir para acompanhar, Sobrevoo para ir atrás do carro.</li>
+      <li><b>Camadas</b> (ícone das folhas): satélite e ruas, quando há rede.</li>
+      <li><b>‹ Guia</b> volta ao guia passo a passo.</li>
+    </ol>
+    <div class="row"><button class="btn" id="helpOk">Entendido</button></div>
+  </div>
+
+  <section class="glass dock" id="dock" aria-label="Reprodução">
+    <div class="dock-row">
+      <button class="play" id="play" aria-label="Reproduzir"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg></button>
+      <button class="ib flat" id="rev" title="Inverter sentido" aria-label="Inverter sentido"><svg viewBox="0 0 24 24"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg></button>
+      <span class="dir" id="dirLbl">A → B</span>
+      <div class="seg speed" role="group" aria-label="Velocidade">
+        <button data-speed="0.5" aria-pressed="false">½×</button>
+        <button data-speed="1" aria-pressed="true">1×</button>
+        <button data-speed="2" aria-pressed="false">2×</button>
+        <button data-speed="4" aria-pressed="false">4×</button>
+      </div>
+      <div class="seg" role="group" aria-label="Modo de câmara" id="modes">
+        <button data-mode="geral" aria-pressed="true">Geral</button>
+        <button data-mode="seguir" aria-pressed="false">Seguir</button>
+        <button data-mode="sobrevoo" aria-pressed="false">Sobrevoo</button>
+      </div>
+      <div class="readouts">
+        <div><span>Percorrido</span><strong id="rDone">0,0 km</strong></div>
+        <div><span>Altitude</span><strong id="rAlt">—</strong></div>
+        <div><span>Inclinação</span><strong id="rGrade">—</strong></div>
+        <div><span>Velocidade</span><strong id="rSpeed">—</strong></div>
+        <div><span>Hora</span><strong id="rTime">—</strong></div>
+      </div>
+      <button class="ib flat" id="drawerBtn" aria-expanded="true" aria-controls="drawer" title="Perfil e pontos" aria-label="Mostrar ou esconder perfil e pontos"><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
+    <div class="drawer" id="drawer">
+      <div class="pins" id="pins" role="list" aria-label="Pontos do guia"></div>
+      <canvas id="profile" aria-label="Perfil de altitude. Arraste para mudar de posição."></canvas>
+    </div>
+  </section>
+
+  <div class="vtoast" id="vtoast" hidden></div>
+</div>

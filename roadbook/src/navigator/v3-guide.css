@@ -1,0 +1,95 @@
+/* Layout: one-screen co-pilot app — header with km chainage strip, route map, the current checkpoint card, big Anterior/Seguinte bar fixed at the bottom. */
+:root{
+  --bg:#f3eee6; --surface:#fffdf9; --ink:#1d2420; --muted:#5f6a63; --line:#ddd4c6;
+  --laterite:#b0531f; --laterite-ink:#ffffff; --route:#c8652c; --route-dim:#d9b9a2; --road:#7b8580;
+  --green:#2f6b4a; --map:#ebe4d7;
+  --f-sign:"Overpass","Arial Narrow",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-km:"Overpass Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1b211e; --ink:#eef0ea; --muted:#9aa59e; --line:#2c3531;
+  --laterite:#e07a3c; --laterite-ink:#1a0f08; --route:#ef8a4a; --route-dim:#7a5038; --road:#7d8883;
+  --green:#6fbf8e; --map:#171c1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1b211e; --ink:#eef0ea; --muted:#9aa59e; --line:#2c3531;
+  --laterite:#e07a3c; --laterite-ink:#1a0f08; --route:#ef8a4a; --route-dim:#7a5038; --road:#7d8883;
+  --green:#6fbf8e; --map:#171c1a; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;overflow:hidden}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--laterite);outline-offset:2px}
+.app{height:100%;display:flex;flex-direction:column;max-width:720px;margin:0 auto}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header{padding-block:10px 8px;display:grid;gap:8px;flex:none}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.top h1{margin:0;font-family:var(--f-sign);font-weight:800;font-size:20px;letter-spacing:.01em}
+.top .step{font-family:var(--f-km);font-size:14px;color:var(--muted);white-space:nowrap}
+.strip{position:relative;height:22px}
+.strip .rail{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:var(--route-dim)}
+.strip .done{position:absolute;left:0;top:9px;height:4px;border-radius:2px;background:var(--route);transition:width .3s}
+.strip button{position:absolute;top:2px;width:18px;height:18px;margin-left:-9px;border-radius:50%;border:2px solid var(--route);
+  background:var(--surface);padding:0;cursor:pointer}
+.strip button.on{background:var(--route);transform:scale(1.25)}
+.strip .ends{position:absolute;top:22px;left:0;right:0;display:flex;justify-content:space-between;font-family:var(--f-km);font-size:11px;color:var(--muted)}
+
+.mapbox{position:relative;flex:0 0 27%;min-height:160px;margin-top:14px;background:var(--map);border-block:1px solid var(--line)}
+#map{width:100%;height:100%;display:block}
+#map *{vector-effect:non-scaling-stroke}
+#map .roadl{stroke:var(--road);stroke-width:6;fill:none;stroke-linecap:round}
+#map .trk{stroke:var(--route-dim);stroke-width:4;fill:none;stroke-linejoin:round;stroke-linecap:round}
+#map .seg{stroke:var(--route);stroke-width:6;fill:none;stroke-linejoin:round;stroke-linecap:round}
+#map .cp circle{fill:var(--surface);stroke:var(--route);stroke-width:2.5;cursor:pointer}
+#map .cp text{fill:var(--ink);font-family:var(--f-km);font-weight:600;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+#map .cp.on circle{fill:var(--route)} #map .cp.on text{fill:var(--laterite-ink)}
+#map .lbl{fill:var(--muted);font-family:var(--f-sign);font-weight:700}
+#map .home{fill:var(--green)}
+#map .me{fill:#2b7de9;stroke:#fff;stroke-width:3}
+#map .home{stroke:var(--surface);stroke-width:3}
+.mapbtn{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:10px;height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);
+  background:var(--surface);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px}
+.mapbtn.d3{right:auto;left:max(10px,env(safe-area-inset-left,0px));border-color:var(--laterite);color:var(--laterite)}
+.mapbtn i{width:10px;height:10px;border-radius:50%;background:#2b7de9;box-shadow:0 0 0 3px rgba(43,125,233,.25)}
+.north{position:absolute;left:max(10px,env(safe-area-inset-left,0px));bottom:8px;font-family:var(--f-sign);font-weight:800;font-size:12px;color:var(--muted);text-align:center;line-height:1}
+.north::before{content:"▲";display:block;font-size:10px}
+
+main{flex:1;overflow-y:auto;padding-block:16px 20px;display:grid;align-content:start;gap:14px;min-height:0}
+.km{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-km);font-weight:600;font-size:15px}
+.km b{background:var(--laterite);color:var(--laterite-ink);padding:3px 9px;border-radius:5px;letter-spacing:.02em}
+.km span{color:var(--muted);font-weight:500}
+h2{margin:0;font-family:var(--f-sign);font-weight:800;font-size:clamp(28px,7.5vw,38px);line-height:1.05;text-wrap:balance}
+.txt{margin:0;font-size:19px;max-width:60ch}
+.txt strong{color:var(--laterite)}
+figure{margin:0;display:grid;gap:6px}
+figure button{padding:0;border:0;background:none;cursor:zoom-in;display:block;border-radius:10px;overflow:hidden}
+figure img{display:block;width:100%;max-height:36vh;object-fit:cover}
+figcaption{font-size:14px;color:var(--muted)}
+.next{font-size:15px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.next b{color:var(--ink)}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0;padding:0;list-style:none}
+.facts li{display:grid}
+.facts small{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.facts b{font-family:var(--f-km);font-size:20px}
+.note{margin:0;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:16px}
+.note b{color:var(--laterite)}
+.save{justify-self:start;height:44px;padding:0 16px;border-radius:10px;border:2px solid var(--laterite);background:transparent;color:var(--laterite);font-weight:700;cursor:pointer}
+.hint{font-size:14px;color:var(--muted);margin:0}
+.d3card{display:grid;gap:6px;padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.d3card p{margin:0;font-size:15px;color:var(--muted)}
+.d3card button{justify-self:start;height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--ink);color:var(--bg);font-weight:700;cursor:pointer}
+
+.gnav{flex:none;display:grid;grid-template-columns:1fr 2fr;gap:10px;padding-block:10px;border-top:1px solid var(--line);background:var(--bg)}
+.gnav button{height:60px;border-radius:14px;font-family:var(--f-sign);font-weight:800;font-size:20px;cursor:pointer}
+#prev{background:var(--surface);border:1px solid var(--line)}
+#next{background:var(--laterite);color:var(--laterite-ink);border:0}
+.gnav button:disabled{opacity:.35;cursor:default}
+
+.gtoast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px);
+  padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:15px;z-index:5}
+.box{position:fixed;inset:0;background:rgba(0,0,0,.92);display:grid;place-items:center;z-index:30;cursor:zoom-out;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.box img{max-width:100%;max-height:100%;object-fit:contain}
+@media (min-height:860px){.mapbox{flex-basis:32%}}
+@media (prefers-reduced-motion:reduce){.strip .done{transition:none}}
